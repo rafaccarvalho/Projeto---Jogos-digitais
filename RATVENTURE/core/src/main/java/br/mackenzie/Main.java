@@ -17,6 +17,12 @@ public class Main implements ApplicationListener {
     private SpriteBatch spriteBatch;
     private OrthographicCamera camera;
     private Sprite ratoAndar1Sprite;
+    private boolean isJumping = false;
+    private float jumpSpeed = 8;
+    private float gravity = -0.4f;
+    private float velocityY = 0;
+    private float groundY = 100;
+
 
     @Override
     public void create() {
@@ -56,12 +62,29 @@ public class Main implements ApplicationListener {
     }
 
     private void input() {
-        // Aqui depois você pode colocar movimentação do rato, ex:
-        // if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) ratoAndar1Sprite.translateX(2);
+        if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.RIGHT)) {
+            ratoAndar1Sprite.translateX(2);
+        }
+        if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.LEFT)) {
+            ratoAndar1Sprite.translateX(-2);
+        }
+        if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.SPACE) && !isJumping) {
+            isJumping = true;
+            velocityY = jumpSpeed;
+        }
     }
 
     private void logic() {
-        // Lógica do jogo (por enquanto vazia)
+        if (isJumping) {
+            ratoAndar1Sprite.translateY(velocityY);
+            velocityY += gravity;
+
+            if (ratoAndar1Sprite.getY() <= groundY) {
+                ratoAndar1Sprite.setY(groundY);
+                isJumping = false;
+                velocityY = 0;
+            }
+        }
     }
 
     private void draw() {
