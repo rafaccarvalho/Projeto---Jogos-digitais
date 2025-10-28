@@ -1,2 +1,4 @@
+.gitkeep
 fundoesgoto.png
+queijo.png
 ratoAndar1.PNG
