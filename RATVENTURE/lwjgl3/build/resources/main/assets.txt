@@ -1,5 +1,8 @@
 .gitkeep
 fundoesgoto.png
+gameover.png
 queijo.png
+queijoestragado.png
 ratoAndar1.PNG
 ratoeira.png
+telainicial.png
