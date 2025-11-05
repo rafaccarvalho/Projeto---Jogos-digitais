@@ -2,3 +2,4 @@
 fundoesgoto.png
 queijo.png
 ratoAndar1.PNG
+ratoeira.png

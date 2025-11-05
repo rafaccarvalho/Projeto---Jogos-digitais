@@ -22,8 +22,8 @@ public class Main implements ApplicationListener {
     private OrthographicCamera camera;
     private Sprite ratoAndar1Sprite;
     private boolean isJumping = false;
-    private final float jumpSpeed = 8;
-    private final float gravity = -0.4f;
+    private final float jumpSpeed = 6;
+    private final float gravity = -0.10f;
     private float velocityY = 0;
     private final float groundY = 100;
 
@@ -38,14 +38,23 @@ public class Main implements ApplicationListener {
     private float queijoRespawnTimer = 0;
     private final float queijoRespawnDelay = 3f; // reaparece após 3 segundos
 
+    // Obstáculo - ratoeira
+    private Texture ratoeiraTexture;
+    private Sprite ratoeiraSprite;
+
     // Vida do rato
     private int vidaRato = 100;
     private final int VIDA_MAX = 100;
     private final int VIDA_POR_QUEIJO = 20; // quanto o queijo recupera
+    private final int DANO_RATOEIRA = 10;   // dano da ratoeira
+
+    // ---- pontuação ----
+    private int pontuacao = 0;
+    private BitmapFont fontePontuacao;
 
     // Visualização das hitboxes
     private ShapeRenderer shapeRenderer;
-    private final boolean mostrarColisoes = false; // set true para ver as colisões
+    private final boolean mostrarColisoes = false;
 
     // Interface de vida
     private BitmapFont fonteVida;
@@ -57,6 +66,7 @@ public class Main implements ApplicationListener {
         backgroundTexture = new Texture("fundoesgoto.png");
         ratoAndar1Texture = new Texture("ratoAndar1.png");
         queijoTexture = new Texture("queijo.png");
+        ratoeiraTexture = new Texture("ratoeira.png"); // nova textura
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(895, 540, camera);
@@ -64,21 +74,31 @@ public class Main implements ApplicationListener {
         // Rato
         ratoAndar1Sprite = new Sprite(ratoAndar1Texture);
         ratoAndar1Sprite.setPosition(200, groundY);
-        ratoAndar1Sprite.setSize(100, 80);
+        ratoAndar1Sprite.setSize(100, 55);
 
         // Fundo
         backgroundWidth = backgroundTexture.getWidth();
 
-        // Cria o queijo (visual grande)
+        // Queijo
         queijoSprite = new Sprite(queijoTexture);
-        queijoSprite.setSize(250, 250);
+        queijoSprite.setSize(50, 40);
         gerarPosicaoQueijo();
 
-        // Ferramenta para desenhar retângulos e HUD
+        // Ratoeira
+        ratoeiraSprite = new Sprite(ratoeiraTexture);
+        ratoeiraSprite.setSize(120, 60);
+        gerarPosicaoRatoeira();
+
+        // HUD
         shapeRenderer = new ShapeRenderer();
         fonteVida = new BitmapFont();
         fonteVida.setColor(Color.WHITE);
         fonteVida.getData().setScale(2f);
+
+        // Fonte da pontuação
+        fontePontuacao = new BitmapFont();
+        fontePontuacao.setColor(Color.YELLOW);
+        fontePontuacao.getData().setScale(2f);
 
         updateCamera();
     }
@@ -100,17 +120,33 @@ public class Main implements ApplicationListener {
     }
 
     private void input() {
+        // mover para a direita
         if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.RIGHT)) {
             ratoAndar1Sprite.translateX(2);
+
+            // Se o rato estiver virado para a esquerda, vira para a direita
+            if (ratoAndar1Sprite.isFlipX()) {
+                ratoAndar1Sprite.flip(true, false);
+            }
         }
+
+        // mover para a esquerda
         if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.LEFT)) {
             ratoAndar1Sprite.translateX(-2);
+
+            // Se o rato estiver virado para a direita, vira para a esquerda
+            if (!ratoAndar1Sprite.isFlipX()) {
+                ratoAndar1Sprite.flip(true, false);
+            }
         }
+
+        // pular
         if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.SPACE) && !isJumping) {
             isJumping = true;
             velocityY = jumpSpeed;
         }
     }
+
 
     private void logic() {
         // Movimento do pulo
@@ -137,6 +173,7 @@ public class Main implements ApplicationListener {
                 queijoAtivo = false;
                 queijoRespawnTimer = queijoRespawnDelay;
                 vidaRato = Math.min(VIDA_MAX, vidaRato + VIDA_POR_QUEIJO);
+                pontuacao++;
             }
         } else {
             queijoRespawnTimer -= Gdx.graphics.getDeltaTime();
@@ -146,40 +183,56 @@ public class Main implements ApplicationListener {
             }
         }
 
+        // Lógica da ratoeira
+        if (colideComHitboxReduzida(ratoAndar1Sprite, ratoeiraSprite)) {
+            // Só perde vida se não estiver pulando
+            if (!isJumping) {
+                vidaRato -= DANO_RATOEIRA;
+                if (vidaRato < 0) vidaRato = 0;
+                gerarPosicaoRatoeira(); // muda a ratoeira de lugar após colisão
+            }
+        }
+
         if (vidaRato <= 0) {
             vidaRato = 0;
         }
     }
 
-    private boolean colideComHitboxReduzida(Sprite rato, Sprite queijo) {
-        Rectangle r = rato.getBoundingRectangle();
-        Rectangle q = queijo.getBoundingRectangle();
+    private boolean colideComHitboxReduzida(Sprite a, Sprite b) {
+        Rectangle r1 = a.getBoundingRectangle();
+        Rectangle r2 = b.getBoundingRectangle();
 
-        final float RATO_HITBOX_SCALE_X = 0.8f;
-        final float RATO_HITBOX_SCALE_Y = 0.7f;
-        final float QUEIJO_HITBOX_SCALE_X = 0.35f;
-        final float QUEIJO_HITBOX_SCALE_Y = 0.35f;
+        float scaleX = 0.8f;
+        float scaleY = 0.7f;
+        Rectangle r1hit = new Rectangle(
+            r1.x + (r1.width * (1 - scaleX) / 2f),
+            r1.y + (r1.height * (1 - scaleY) / 2f),
+            r1.width * scaleX,
+            r1.height * scaleY
+        );
 
-        float rHitW = r.width * RATO_HITBOX_SCALE_X;
-        float rHitH = r.height * RATO_HITBOX_SCALE_Y;
-        float rHitX = r.x + (r.width - rHitW) / 2f;
-        float rHitY = r.y + (r.height - rHitH) / 2f;
-        Rectangle rHit = new Rectangle(rHitX, rHitY, rHitW, rHitH);
+        Rectangle r2hit = new Rectangle(
+            r2.x + (r2.width * 0.1f),
+            r2.y + (r2.height * 0.1f),
+            r2.width * 0.8f,
+            r2.height * 0.8f
+        );
 
-        float qHitW = q.width * QUEIJO_HITBOX_SCALE_X;
-        float qHitH = q.height * QUEIJO_HITBOX_SCALE_Y;
-        float qHitX = q.x + (q.width - qHitW) / 2f;
-        float qHitY = q.y + (q.height - qHitH) / 2f;
-        Rectangle qHit = new Rectangle(qHitX, qHitY, qHitW, qHitH);
-
-        return rHit.overlaps(qHit);
+        return r1hit.overlaps(r2hit);
     }
 
     private void gerarPosicaoQueijo() {
         float margin = 50;
         float x = MathUtils.random(margin, worldWidth - queijoSprite.getWidth() - margin);
-        float y = groundY + 20;
+        float y = MathUtils.random(groundY + 80, groundY + 200);
         queijoSprite.setPosition(x, y);
+    }
+
+    private void gerarPosicaoRatoeira() {
+        float margin = 100;
+        float x = MathUtils.random(margin, worldWidth - ratoeiraSprite.getWidth() - margin);
+        float y = groundY;
+        ratoeiraSprite.setPosition(x, y);
     }
 
     private void updateCamera() {
@@ -213,18 +266,21 @@ public class Main implements ApplicationListener {
         if (queijoAtivo)
             queijoSprite.draw(spriteBatch);
 
+        // Ratoeira
+        ratoeiraSprite.draw(spriteBatch);
+
         // Rato
         if (vidaRato > 0)
             ratoAndar1Sprite.draw(spriteBatch);
 
         spriteBatch.end();
 
-        // HUD da vida
+        // HUDs
         drawVidaHUD();
+        drawPontuacaoHUD();
     }
 
     private void drawVidaHUD() {
-        // Desenha a barrinha de vida fixa na tela (não move com a câmera)
         shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
@@ -233,20 +289,25 @@ public class Main implements ApplicationListener {
         float barWidth = 200;
         float barHeight = 20;
 
-        // Fundo da barra
         shapeRenderer.setColor(Color.DARK_GRAY);
         shapeRenderer.rect(barX, barY, barWidth, barHeight);
 
-        // Parte preenchida
         float vidaPercentual = (float) vidaRato / VIDA_MAX;
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(barX, barY, barWidth * vidaPercentual, barHeight);
 
         shapeRenderer.end();
 
-        // Texto da vida
         spriteBatch.begin();
         fonteVida.draw(spriteBatch, "Vida: " + vidaRato + "/" + VIDA_MAX, barX, barY + 40);
+        spriteBatch.end();
+    }
+
+    private void drawPontuacaoHUD() {
+        spriteBatch.begin();
+        float textX = camera.position.x - viewport.getWorldWidth() / 2 + 30;
+        float textY = camera.position.y + viewport.getWorldHeight() / 2 - 90;
+        fontePontuacao.draw(spriteBatch, "Queijos: " + pontuacao, textX, textY);
         spriteBatch.end();
     }
 
@@ -261,7 +322,9 @@ public class Main implements ApplicationListener {
         backgroundTexture.dispose();
         ratoAndar1Texture.dispose();
         queijoTexture.dispose();
+        ratoeiraTexture.dispose();
         shapeRenderer.dispose();
         fonteVida.dispose();
+        fontePontuacao.dispose();
     }
 }
