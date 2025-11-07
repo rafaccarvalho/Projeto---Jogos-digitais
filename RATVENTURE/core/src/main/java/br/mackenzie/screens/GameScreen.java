@@ -1,5 +1,6 @@
 package br.mackenzie.screens;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -28,6 +29,7 @@ import br.mackenzie.ui.HUD;
 public class GameScreen implements Screen {
 
     private final Main game;
+    private OrthographicCamera hudCamera;
     private OrthographicCamera camera;
     private FitViewport viewport;
     private SpriteBatch batch;
@@ -81,6 +83,9 @@ public class GameScreen implements Screen {
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(20f, 15f, camera);
+
+        hudCamera = new OrthographicCamera();
+        hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
@@ -145,18 +150,16 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // --- Atualização lógica ---
         if (!gameOver) {
             player.handleInput();
 
-            // Atualiza todos os itens na lista
             for (Collectible item : collectibles) {
                 item.update();
             }
             player.update();
 
             world.step(1 / 60f, 6, 2);
-
-            // NOVO: Destrói corpos marcados após o passo do mundo
             gameContactListener.processDestructions();
 
             if (vidaRato <= 0) {
@@ -166,15 +169,13 @@ public class GameScreen implements Screen {
         } else {
             gameOverTimer -= delta;
             if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-                // A melhor forma de resetar TUDO (mundo Box2D e entidades) é chamar show() novamente
-                // Mas para fins de teste, vamos tentar o resetGame()
                 resetGame();
             }
         }
 
         updateCamera();
 
-        // Renderização
+        // --- Renderiza o mapa e entidades ---
         ScreenUtils.clear(Color.BLACK);
         mapRenderer.setView(camera);
         mapRenderer.render();
@@ -182,7 +183,6 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Desenha todos os itens na lista
         for (Collectible item : collectibles) {
             item.draw(batch);
         }
@@ -196,9 +196,25 @@ public class GameScreen implements Screen {
 
         batch.end();
 
-        hud.drawHUD(batch, shapeRenderer, viewport, camera, vidaRato, VIDA_MAX, pontuacao);
+        // --- Renderização do HUD ---
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        hudCamera.update();
+
+        // Define projeção fixa (tela)
+        batch.setProjectionMatrix(hudCamera.combined);
+        shapeRenderer.setProjectionMatrix(hudCamera.combined);
+
+        // Desenha o HUD (barra e textos)
+        hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, pontuacao);
+
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // --- Debug Box2D ---
         b2dr.render(world, camera.combined);
     }
+
+
+
 
     private void resetGame() {
         // Para uma reinicialização LIMPA, o ideal é recriar o mundo e as entidades
