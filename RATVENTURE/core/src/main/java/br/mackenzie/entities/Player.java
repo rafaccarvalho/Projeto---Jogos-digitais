@@ -4,76 +4,120 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.*;
 
 public class Player {
-    private final Texture texture;
-    private final Sprite sprite;
-    private boolean isJumping = false;
-    private final float jumpSpeed = 6;
-    private final float gravity = -0.10f;
-    private float velocityY = 0;
-    private final float groundY = 100;
-    private final float worldWidth = 3000;
+    // 🚨 PPM é a referência universal (20f)
+    public static final float PPM = 20f;
 
-    public Player() {
+    private World world;
+    private Body body;
+    private Texture texture;
+    private Sprite sprite;
+
+    private boolean isGrounded = false;
+
+    private final float moveSpeed = 3f;
+    private final float jumpImpulse = 40f;
+    private final float maxWalkVel = 4f;
+
+    public Player(World world, float startXpx, float startYpx) {
+        this.world = world;
         texture = new Texture("ratoAndar1.png");
         sprite = new Sprite(texture);
-        sprite.setSize(100, 55);
-        sprite.setPosition(200, groundY);
+        sprite.setSize(70f / PPM, 30f / PPM);
+        defineBody(startXpx, startYpx);
+    }
+
+    private void defineBody(float startXpx, float startYpx) {
+        BodyDef bdef = new BodyDef();
+        bdef.type = BodyDef.BodyType.DynamicBody;
+        bdef.position.set(startXpx / PPM, startYpx / PPM);
+        bdef.fixedRotation = true;
+        body = world.createBody(bdef);
+
+        PolygonShape bodyShape = new PolygonShape();
+        bodyShape.setAsBox(sprite.getWidth() / 2f, sprite.getHeight() / 2f);
+
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = bodyShape;
+        fdef.density = 1f;
+        fdef.friction = 0.4f;
+        fdef.restitution = 0f;
+
+        body.createFixture(fdef).setUserData("player");
+        bodyShape.dispose();
+
+        PolygonShape footShape = new PolygonShape();
+        footShape.setAsBox(
+            (sprite.getWidth() / 2f) * 0.9f,
+            5f / PPM,
+            new Vector2(0, -(sprite.getHeight() / 2f)),
+            0
+        );
+
+        fdef.shape = footShape;
+        fdef.isSensor = true;
+        fdef.density = 0;
+
+        body.createFixture(fdef).setUserData("foot");
+        footShape.dispose();
     }
 
     public void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            sprite.translateX(2);
-            if (sprite.isFlipX()) sprite.flip(true, false);
-        }
+        Vector2 vel = body.getLinearVelocity();
+        float desiredVelX = 0;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            sprite.translateX(-2);
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            desiredVelX = moveSpeed;
+            if (sprite.isFlipX()) sprite.flip(true, false);
+        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            desiredVelX = -moveSpeed;
             if (!sprite.isFlipX()) sprite.flip(true, false);
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && !isJumping) {
-            isJumping = true;
-            velocityY = jumpSpeed;
+        float velChangeX = desiredVelX - vel.x;
+        float impulseX = body.getMass() * velChangeX;
+        body.applyLinearImpulse(new Vector2(impulseX, 0), body.getWorldCenter(), true);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && isGrounded) {
+            body.applyLinearImpulse(new Vector2(0, jumpImpulse), body.getWorldCenter(), true);
+            isGrounded = false;
+        }
+
+        if (Math.abs(body.getLinearVelocity().x) > maxWalkVel) {
+            body.setLinearVelocity(Math.signum(body.getLinearVelocity().x) * maxWalkVel, body.getLinearVelocity().y);
         }
     }
 
-    public void updateJump() {
-        if (isJumping) {
-            sprite.translateY(velocityY);
-            velocityY += gravity;
-            if (sprite.getY() <= groundY) {
-                sprite.setY(groundY);
-                isJumping = false;
-                velocityY = 0;
-            }
-        }
-
-        if (sprite.getX() < 0) sprite.setX(0);
-        if (sprite.getX() > worldWidth - sprite.getWidth())
-            sprite.setX(worldWidth - sprite.getWidth());
+    public void update() {
+        sprite.setPosition(
+            body.getPosition().x - sprite.getWidth() / 2f,
+            body.getPosition().y - sprite.getHeight() / 2f
+        );
     }
 
-    public float getCenterX() {
-        return sprite.getX() + sprite.getWidth() / 2;
+    public void draw(SpriteBatch batch) {
+        sprite.draw(batch);
+    }
+
+    public Body getBody() { return body; }
+    public void setGrounded(boolean g) { this.isGrounded = g; }
+    public boolean isGrounded() { return this.isGrounded; }
+
+    public void resetPosition(float xpx, float ypx) {
+        body.setTransform(xpx / PPM, ypx / PPM, 0);
+        body.setLinearVelocity(0, 0);
+        isGrounded = false;
+    }
+
+    public void dispose() {
+        if (texture != null) texture.dispose();
     }
 
     public Sprite getSprite() {
         return sprite;
-    }
-
-    public void reset() {
-        sprite.setPosition(200, groundY);
-        isJumping = false;
-        velocityY = 0;
-    }
-
-    public void draw(com.badlogic.gdx.graphics.g2d.SpriteBatch batch) {
-        sprite.draw(batch);
-    }
-
-    public void dispose() {
-        texture.dispose();
     }
 }

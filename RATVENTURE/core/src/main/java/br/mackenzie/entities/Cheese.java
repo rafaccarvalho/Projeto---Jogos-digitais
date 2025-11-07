@@ -1,46 +1,39 @@
 package br.mackenzie.entities;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Shape;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.PolygonShape; // Adicionada se necessário
 
-public class Cheese {
-    private final Texture texture;
-    private final Sprite sprite;
-    private boolean ativo = true;
+public class Cheese extends Collectible {
+
     private final float groundY = 100;
-    private final float worldWidth = 3000;
+    private final float worldWidth = 3200;
+    private final float sizeWidth = 50;
+    private final float sizeHeight = 40;
 
-    public Cheese() {
-        texture = new Texture("queijo.png");
-        sprite = new Sprite(texture);
-        sprite.setSize(50, 40);
-        respawn();
+    public Cheese(World world, float xpx, float ypx) {
+        super(world, "queijo.png",
+            50f, 40f, // Tamanho em Pixels
+            xpx, ypx);
     }
 
-    public void respawn() {
-        float margin = 50;
-        float x = MathUtils.random(margin, worldWidth - sprite.getWidth() - margin);
-        float y = MathUtils.random(groundY + 80, groundY + 200);
-        sprite.setPosition(x, y);
-        ativo = true;
+    @Override
+    protected Shape getShape(float widthPx, float heightPx) {
+        CircleShape shape = new CircleShape();
+        // Raio do círculo
+        shape.setRadius((widthPx / 2f) / PPM);
+        return shape;
     }
 
-    public boolean checkCollision(Sprite rato) {
-        if (!ativo) return false;
-        if (rato.getBoundingRectangle().overlaps(sprite.getBoundingRectangle())) {
-            ativo = false;
-            respawn();
-            return true;
-        }
-        return false;
-    }
+    @Override
+    public void respawnRandom() {
+        float margin = 100;
+        float x_px = MathUtils.random(margin, worldWidth - sizeWidth - margin);
+        float y_px = MathUtils.random(groundY + 80, groundY + 200);
 
-    public void draw(SpriteBatch batch) {
-        if (ativo)
-            sprite.draw(batch);
+        // Recria o corpo na nova posição (o 'recreateBody' destruirá o antigo Body Box2D)
+        recreateBody(x_px, y_px);
     }
-
-    public void dispose() { texture.dispose(); }
 }

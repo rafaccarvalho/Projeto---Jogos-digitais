@@ -1,17 +1,26 @@
 package br.mackenzie.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import java.util.ArrayList;
+import java.util.List;
+
 import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
@@ -24,29 +33,42 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
 
-    // Fundo
-    private Texture background;
-    private float backgroundWidth;
-    private final float worldWidth = 3000;
+    // Map
+    private TmxMapLoader mapLoader;
+    private TiledMap map;
+    private OrthogonalTiledMapRenderer mapRenderer;
 
-    // Entidades
+    // Box2D
+    private World world;
+    private Box2DDebugRenderer b2dr;
+
+    private CustomContactListener gameContactListener;
+
+    // Entities
     private Player player;
     private Cheese cheese;
-    private RottenCheese rottenCheese;
+    private RottenCheese rotten;
     private Trap trap;
+    // Lista para gerenciar todos os objetos que podem ser coletados/destruídos
+    private List<Collectible> collectibles;
 
-    // HUD e variáveis de jogo
+    // HUD / status
     private HUD hud;
+    private Texture gameOverTexture;
     private int pontuacao = 0;
     private int vidaRato = 100;
     private final int VIDA_MAX = 100;
     private final int VIDA_POR_QUEIJO = 20;
     private final int DANO_RATOEIRA = 10;
     private final int DANO_QUEIJO_ESTRAGADO = 10;
-
     private boolean gameOver = false;
-    private Texture gameOverTexture;
     private float gameOverTimer = 0;
+
+    // Mapa (em Pixels)
+    private final float MAP_WIDTH_PX = 3200f;
+    private final float MAP_HEIGHT_PX = 672f;
+    private final float GRAVITY = -10f;
+
 
     public GameScreen(Main game) {
         this.game = game;
@@ -54,130 +76,274 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        world = new World(new Vector2(0, GRAVITY), true);
+        b2dr = new Box2DDebugRenderer();
+
         camera = new OrthographicCamera();
-        viewport = new FitViewport(895, 540, camera);
+        viewport = new FitViewport(20f, 15f, camera);
+
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
 
-        background = new Texture("fundoesgoto.png");
-        backgroundWidth = background.getWidth();
+        mapLoader = new TmxMapLoader();
+        map = mapLoader.load("esgoto.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 1f / Player.PPM);
 
-        player = new Player();
-        cheese = new Cheese();
-        rottenCheese = new RottenCheese();
-        trap = new Trap();
+        createMapBodiesFromLayer2();
+
+        float playerStartX = 200f, playerStartY = 120f;
+        player = new Player(world, playerStartX, playerStartY);
+
+        cheese = new Cheese(world, playerStartX + 600f, playerStartY + 20f);
+        rotten = new RottenCheese(world, playerStartX + 900f, playerStartY + 20f);
+        trap = new Trap(world, playerStartX + 1200f, playerStartY);
+
+        // Inicializa a lista de colecionáveis
+        collectibles = new ArrayList<>();
+        collectibles.add(cheese);
+        collectibles.add(rotten);
+        collectibles.add(trap);
 
         hud = new HUD();
         gameOverTexture = new Texture("gameover.png");
 
-        updateCamera();
+        gameContactListener = new CustomContactListener(this);
+        world.setContactListener(gameContactListener);
+
+        camera.position.set(playerStartX / Player.PPM, playerStartY / Player.PPM, 0);
+        camera.update();
     }
+
+    private void createMapBodiesFromLayer2() {
+        BodyDef bdef = new BodyDef();
+        PolygonShape shape = new PolygonShape();
+        FixtureDef fdef = new FixtureDef();
+
+        if (map.getLayers().getCount() <= 2) {
+            Gdx.app.error("GameScreen", "Layer 2 não existe no mapa. Colisão do chão pode falhar.");
+            return;
+        }
+
+        for (MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rect.getX() + rect.getWidth() / 2f) / Player.PPM,
+                (rect.getY() + rect.getHeight() / 2f) / Player.PPM);
+
+            Body body = world.createBody(bdef);
+            shape.setAsBox((rect.getWidth() / 2f) / Player.PPM, (rect.getHeight() / 2f) / Player.PPM);
+
+            fdef.shape = shape;
+            fdef.friction = 0.8f;
+            body.createFixture(fdef).setUserData("ground");
+        }
+
+        shape.dispose();
+    }
+
 
     @Override
     public void render(float delta) {
         if (!gameOver) {
-            handleInput();
-            logic(delta);
+            player.handleInput();
+
+            // Atualiza todos os itens na lista
+            for (Collectible item : collectibles) {
+                item.update();
+            }
+            player.update();
+
+            world.step(1 / 60f, 6, 2);
+
+            // NOVO: Destrói corpos marcados após o passo do mundo
+            gameContactListener.processDestructions();
+
+            if (vidaRato <= 0) {
+                gameOver = true;
+                gameOverTimer = 1.5f;
+            }
         } else {
             gameOverTimer -= delta;
-            if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.ENTER)) {
+            if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+                // A melhor forma de resetar TUDO (mundo Box2D e entidades) é chamar show() novamente
+                // Mas para fins de teste, vamos tentar o resetGame()
                 resetGame();
             }
         }
 
-        draw();
-    }
-
-    private void handleInput() {
-        player.handleInput();
-    }
-
-    private void logic(float delta) {
-        player.updateJump();
-
-        if (cheese.checkCollision(player.getSprite())) {
-            pontuacao++;
-            vidaRato = Math.min(VIDA_MAX, vidaRato + VIDA_POR_QUEIJO);
-        }
-
-        if (rottenCheese.checkCollision(player.getSprite())) {
-            vidaRato -= DANO_QUEIJO_ESTRAGADO;
-        }
-
-        if (trap.checkCollision(player.getSprite())) {
-            vidaRato -= DANO_RATOEIRA;
-        }
-
-        if (vidaRato <= 0) {
-            gameOver = true;
-            gameOverTimer = 1.5f;
-        }
-
         updateCamera();
-    }
 
-    private void updateCamera() {
-        float targetX = player.getCenterX();
-        float cameraHalfWidth = viewport.getWorldWidth() / 2;
-        targetX = MathUtils.clamp(targetX, cameraHalfWidth, worldWidth - cameraHalfWidth);
-        camera.position.set(targetX, 270, 0);
-        camera.update();
-    }
-
-    private void draw() {
+        // Renderização
         ScreenUtils.clear(Color.BLACK);
-        viewport.apply();
+        mapRenderer.setView(camera);
+        mapRenderer.render();
+
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        float height = viewport.getWorldHeight();
-        int numBackgrounds = (int) Math.ceil(worldWidth / backgroundWidth) + 1;
-        for (int i = 0; i < numBackgrounds; i++) {
-            batch.draw(background, i * backgroundWidth, 0, backgroundWidth, height);
+        // Desenha todos os itens na lista
+        for (Collectible item : collectibles) {
+            item.draw(batch);
         }
+        player.draw(batch);
 
-        if (!gameOver) {
-            cheese.draw(batch);
-            rottenCheese.draw(batch);
-            trap.draw(batch);
-            player.draw(batch);
-        } else {
-            batch.draw(gameOverTexture, camera.position.x - viewport.getWorldWidth() / 2,
-                camera.position.y - viewport.getWorldHeight() / 2,
-                viewport.getWorldWidth(), viewport.getWorldHeight());
+        if (gameOver) {
+            float vx = camera.position.x - viewport.getWorldWidth() / 2f;
+            float vy = camera.position.y - viewport.getWorldHeight() / 2f;
+            batch.draw(gameOverTexture, vx, vy, viewport.getWorldWidth(), viewport.getWorldHeight());
         }
 
         batch.end();
 
-        if (!gameOver)
-            hud.drawHUD(batch, shapeRenderer, viewport, camera, vidaRato, VIDA_MAX, pontuacao);
+        hud.drawHUD(batch, shapeRenderer, viewport, camera, vidaRato, VIDA_MAX, pontuacao);
+        b2dr.render(world, camera.combined);
     }
 
     private void resetGame() {
-        vidaRato = VIDA_MAX;
-        pontuacao = 0;
-        player.reset();
-        cheese.respawn();
-        rottenCheese.respawn();
-        trap.respawn();
-        gameOver = false;
+        // Para uma reinicialização LIMPA, o ideal é recriar o mundo e as entidades
+        this.dispose();
+        this.show();
     }
+
+    private void updateCamera() {
+        float mapWidth = MAP_WIDTH_PX / Player.PPM;
+        float mapHeight = MAP_HEIGHT_PX / Player.PPM;
+
+        float halfWidth = viewport.getWorldWidth() / 2f;
+        float halfHeight = viewport.getWorldHeight() / 2f;
+
+        float targetX = player.getBody().getPosition().x;
+        float targetY = player.getBody().getPosition().y;
+
+        targetX = Math.max(halfWidth, Math.min(targetX, mapWidth - halfWidth));
+        targetY = Math.max(halfHeight, Math.min(targetY, mapHeight - halfHeight));
+
+        camera.position.set(targetX, targetY, 0);
+        camera.update();
+    }
+
+    @Override
+    public void resize(int w, int h) {
+        viewport.update(w, h, true);
+    }
+
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
 
     @Override
     public void dispose() {
         batch.dispose();
-        background.dispose();
-        shapeRenderer.dispose();
-        gameOverTexture.dispose();
+        if (gameOverTexture != null) gameOverTexture.dispose();
         player.dispose();
         cheese.dispose();
-        rottenCheese.dispose();
+        rotten.dispose();
         trap.dispose();
         hud.dispose();
+        if (world != null) world.dispose();
+        if (map != null) map.dispose();
+        if (b2dr != null) b2dr.dispose();
+        if (mapRenderer != null) mapRenderer.dispose();
+        // Não precisamos destruir explicitamente os bodies se chamarmos world.dispose()
     }
+    private static class CustomContactListener implements ContactListener {
+        private final GameScreen screen;
+        // Lista de Collectible que devem ser destruídos no próximo passo
+        private final List<Collectible> itemsToRemove = new ArrayList<>();
 
-    @Override public void resize(int w, int h) { viewport.update(w, h); }
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+        public CustomContactListener(GameScreen screen) {
+            this.screen = screen;
+        }
+
+        // Chamado APÓS world.step()
+        public void processDestructions() {
+            for (Collectible item : itemsToRemove) {
+                if (item.getBody() != null) {
+                    // 🔒 desativa antes de destruir
+                    item.getBody().setActive(false);
+                    screen.world.destroyBody(item.getBody());
+                    item.body = null;
+                }
+            }
+            itemsToRemove.clear();
+        }
+
+        @Override
+        public void beginContact(Contact contact) {
+            Fixture fixA = contact.getFixtureA();
+            Fixture fixB = contact.getFixtureB();
+            Object dataA = fixA.getUserData();
+            Object dataB = fixB.getUserData();
+
+            if (dataA == null || dataB == null) return;
+
+            // --- Player/Foot vs Ground ---
+            boolean isFoot = dataA.equals("foot") || dataB.equals("foot");
+            boolean isGround = dataA.equals("ground") || dataB.equals("ground");
+
+            if (isFoot && isGround) {
+                screen.player.setGrounded(true);
+            }
+
+            // --- Player vs Collectible ---
+            boolean isPlayerBody = dataA.equals("player") || dataB.equals("player");
+            if (!isPlayerBody) return;
+
+            Collectible item = null;
+            if (dataA instanceof Collectible) item = (Collectible) dataA;
+            if (dataB instanceof Collectible) item = (Collectible) dataB;
+
+            if (item == null) return;
+
+            if (item instanceof Cheese) {
+                Cheese c = (Cheese) item;
+                if (c.ativo) {
+                    screen.pontuacao++;
+                    screen.vidaRato = Math.min(screen.VIDA_MAX, screen.vidaRato + screen.VIDA_POR_QUEIJO);
+
+                    // 🔒 não destruir agora — apenas marcar e adicionar à fila
+                    c.ativo = false;
+                    itemsToRemove.add(c);
+                }
+            } else if (item instanceof RottenCheese) {
+                RottenCheese rc = (RottenCheese) item;
+                if (rc.ativo) {
+                    screen.vidaRato -= screen.DANO_QUEIJO_ESTRAGADO;
+                    rc.ativo = false;
+                    itemsToRemove.add(rc);
+                }
+            } else if (item instanceof Trap) {
+                Trap t = (Trap) item;
+                if (t.ativo) {
+                    screen.vidaRato -= screen.DANO_RATOEIRA;
+                    // traps não são removidas
+                }
+            }
+
+            if (screen.vidaRato <= 0) {
+                screen.gameOver = true;
+                screen.gameOverTimer = 1.5f;
+            }
+        }
+
+        @Override
+        public void endContact(Contact contact) {
+            Fixture fixA = contact.getFixtureA();
+            Fixture fixB = contact.getFixtureB();
+            Object dataA = fixA.getUserData();
+            Object dataB = fixB.getUserData();
+            if (dataA == null || dataB == null) return;
+
+            boolean isFoot = dataA.equals("foot") || dataB.equals("foot");
+            boolean isGround = dataA.equals("ground") || dataB.equals("ground");
+
+            if (isFoot && isGround) {
+                screen.player.setGrounded(false);
+            }
+        }
+
+        @Override public void preSolve(Contact contact, Manifold oldManifold) {}
+        @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
+    }
 }

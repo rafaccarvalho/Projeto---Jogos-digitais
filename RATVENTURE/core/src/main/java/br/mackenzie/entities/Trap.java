@@ -1,36 +1,42 @@
 package br.mackenzie.entities;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.Shape;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.math.Vector2; // Adicionada se necessário
 
-public class Trap {
-    private final Texture texture;
-    private final Sprite sprite;
+public class Trap extends Collectible {
+
     private final float groundY = 100;
     private final float worldWidth = 3000;
+    private final float sizeWidth = 120;
+    private final float sizeHeight = 60;
 
-    public Trap() {
-        texture = new Texture("ratoeira.png");
-        sprite = new Sprite(texture);
-        sprite.setSize(120, 60);
-        respawn();
+    public Trap(World world, float xpx, float ypx) {
+        super(world, "ratoeira.png",
+            120f, 60f, // Tamanho em Pixels
+            xpx, ypx);
     }
 
-    public void respawn() {
+    @Override
+    protected Shape getShape(float widthPx, float heightPx) {
+        PolygonShape shape = new PolygonShape();
+        // Meia-largura e meia-altura do Box (em metros)
+        shape.setAsBox((widthPx / 2f) / PPM, (heightPx / 2f) / PPM);
+        return shape;
+    }
+
+    @Override
+    public void respawnRandom() {
         float margin = 100;
-        float x = MathUtils.random(margin, worldWidth - sprite.getWidth() - margin);
-        sprite.setPosition(x, groundY);
+        float x_px = MathUtils.random(margin, worldWidth - sizeWidth - margin);
+        float y_px = groundY + (sizeHeight / 2f); // Centraliza no groundY
+
+        // Recria o corpo na nova posição
+        recreateBody(x_px, y_px);
     }
 
-    public boolean checkCollision(Sprite rato) {
-        return rato.getBoundingRectangle().overlaps(sprite.getBoundingRectangle());
-    }
-
-    public void draw(SpriteBatch batch) {
-        sprite.draw(batch);
-    }
-
-    public void dispose() { texture.dispose(); }
+    // Armadilhas geralmente não são coletadas e não desaparecem, mas usamos Collectible.collect()
+    // no ContactListener para aplicar a lógica de dano.
 }
