@@ -15,7 +15,7 @@ public class Trap extends Collectible {
 
     public Trap(World world, float xpx, float ypx) {
         super(world, "ratoeira.png",
-            120f, 60f, // Tamanho em Pixels
+            90f, 60f, // Tamanho em Pixels
             xpx, ypx);
     }
 

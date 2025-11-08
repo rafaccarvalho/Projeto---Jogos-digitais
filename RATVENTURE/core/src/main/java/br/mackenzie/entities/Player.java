@@ -19,15 +19,15 @@ public class Player {
 
     private boolean isGrounded = false;
 
-    private final float moveSpeed = 3f;
-    private final float jumpImpulse = 40f;
+    private final float moveSpeed = 55f;
+    private final float jumpImpulse = 25f;
     private final float maxWalkVel = 4f;
 
     public Player(World world, float startXpx, float startYpx) {
         this.world = world;
         texture = new Texture("ratoAndar1.png");
         sprite = new Sprite(texture);
-        sprite.setSize(70f / PPM, 30f / PPM);
+        sprite.setSize(40f / PPM, 25f / PPM);
         defineBody(startXpx, startYpx);
     }
 

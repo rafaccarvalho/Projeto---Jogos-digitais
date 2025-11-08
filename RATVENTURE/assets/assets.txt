@@ -1,7 +1,6 @@
 .gitkeep
 Nintendo Switch - Super Mario Maker 2 - Super Mario World - Backgrounds (SMW).png
 Nintendo Switch - Super Mario Maker 2 - Super Mario World - Backgrounds (SMW).tsx
-Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks (1).png
 Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks.png
 Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks.tsx
 esgoto.tmx

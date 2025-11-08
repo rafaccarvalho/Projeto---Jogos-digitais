@@ -64,13 +64,13 @@ public class GameScreen implements Screen {
     private int vidaRato = 100;
     private final int VIDA_MAX = 100;
     private final int VIDA_POR_QUEIJO = 20;
-    private final int DANO_RATOEIRA = 10;
+    private final int DANO_RATOEIRA = 100;
     private final int DANO_QUEIJO_ESTRAGADO = 10;
     private boolean gameOver = false;
     private float gameOverTimer = 0;
 
     // Mapa (em Pixels)
-    private final float MAP_WIDTH_PX = 3200f;
+    private final float MAP_WIDTH_PX = 3900f;
     private final float MAP_HEIGHT_PX = 672f;
     private final float GRAVITY = -10f;
     // Tamanho da tela (mais fácil de editar)
@@ -177,7 +177,7 @@ public class GameScreen implements Screen {
         } else {
             gameOverTimer -= delta;
             if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-                resetGame();
+                game.setScreen(new GameScreen(game));
             }
         }
         updateCamera();
@@ -204,17 +204,20 @@ public class GameScreen implements Screen {
         batch.end();
 
         // --- Renderização do HUD ---
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        hudCamera.update();
+        if(!gameOver) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            hudCamera.update();
 
-        // Define projeção fixa (tela)
-        batch.setProjectionMatrix(hudCamera.combined);
-        shapeRenderer.setProjectionMatrix(hudCamera.combined);
 
-        // Desenha o HUD (barra e textos)
-        hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, pontuacao);
+            // Define projeção fixa (tela)
+            batch.setProjectionMatrix(hudCamera.combined);
+            shapeRenderer.setProjectionMatrix(hudCamera.combined);
 
-        Gdx.gl.glDisable(GL20.GL_BLEND);
+            // Desenha o HUD (barra e textos)
+            hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, pontuacao);
+
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
 
         // --- Debug Box2D ---
         b2dr.render(world, camera.combined);
@@ -341,7 +344,8 @@ public class GameScreen implements Screen {
             } else if (item instanceof Trap) {
                 Trap t = (Trap) item;
                 if (t.ativo) {
-                    screen.vidaRato -= screen.DANO_RATOEIRA;
+                    screen.vidaRato = 0;
+                    t.ativo = false;
                     // traps não são removidas
                 }
             }
@@ -349,6 +353,7 @@ public class GameScreen implements Screen {
             if (screen.vidaRato <= 0) {
                 screen.gameOver = true;
                 screen.gameOverTimer = 1.5f;
+
             }
         }
 
