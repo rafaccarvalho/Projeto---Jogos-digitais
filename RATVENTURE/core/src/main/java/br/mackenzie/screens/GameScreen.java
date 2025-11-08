@@ -19,15 +19,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 public class GameScreen implements Screen {
 
@@ -161,11 +159,12 @@ public class GameScreen implements Screen {
         // --- Atualização lógica ---
         if (!gameOver) {
             player.handleInput();
+            player.update(Gdx.graphics.getDeltaTime());
 
             for (Collectible item : collectibles) {
                 item.update();
             }
-            player.update();
+            //player.update();
 
             world.step(1 / 60f, 6, 2);
             gameContactListener.processDestructions();

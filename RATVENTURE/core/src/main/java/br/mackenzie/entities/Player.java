@@ -3,31 +3,40 @@ package br.mackenzie.entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 
 public class Player {
-    // 🚨 PPM é a referência universal (20f)
-    public static final float PPM = 20f;
+    public static final float PPM = 15f;
 
     private World world;
     private Body body;
-    private Texture texture;
     private Sprite sprite;
 
+    private Texture texIdle , texRight , textLeft;
+
     private boolean isGrounded = false;
+    private boolean facingRight = true;
+
 
     private final float moveSpeed = 55f;
-    private final float jumpImpulse = 25f;
+    private final float jumpImpulse = 10f;
     private final float maxWalkVel = 4f;
 
     public Player(World world, float startXpx, float startYpx) {
         this.world = world;
-        texture = new Texture("ratoAndar1.png");
-        sprite = new Sprite(texture);
-        sprite.setSize(40f / PPM, 25f / PPM);
+
+        texIdle = new Texture("ratoFrente3.PNG");
+        texRight = new Texture("ratoAndar1.PNG");
+        textLeft = new Texture("ratoAndar2.PNG");
+
+
+        // Sprite inicial (parado)
+        sprite = new Sprite(texIdle);
+        sprite.setSize(15f / PPM, 15f / PPM);
+
         defineBody(startXpx, startYpx);
     }
 
@@ -46,22 +55,16 @@ public class Player {
         fdef.density = 1f;
         fdef.friction = 0.4f;
         fdef.restitution = 0f;
-
         body.createFixture(fdef).setUserData("player");
         bodyShape.dispose();
 
+        // Sensor do pé
         PolygonShape footShape = new PolygonShape();
-        footShape.setAsBox(
-            (sprite.getWidth() / 2f) * 0.9f,
-            5f / PPM,
-            new Vector2(0, -(sprite.getHeight() / 2f)),
-            0
-        );
-
+        footShape.setAsBox((sprite.getWidth() / 2f) * 0.9f, 5f / PPM,
+            new Vector2(0, -(sprite.getHeight() / 2f)), 0);
         fdef.shape = footShape;
         fdef.isSensor = true;
         fdef.density = 0;
-
         body.createFixture(fdef).setUserData("foot");
         footShape.dispose();
     }
@@ -72,10 +75,14 @@ public class Player {
 
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
             desiredVelX = moveSpeed;
-            if (sprite.isFlipX()) sprite.flip(true, false);
+            sprite.setTexture(texRight);
+            facingRight = true;
         } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             desiredVelX = -moveSpeed;
-            if (!sprite.isFlipX()) sprite.flip(true, false);
+            sprite.setTexture(textLeft);
+            facingRight = false;
+        }else{
+            sprite.setTexture(texIdle);
         }
 
         float velChangeX = desiredVelX - vel.x;
@@ -92,11 +99,16 @@ public class Player {
         }
     }
 
-    public void update() {
+    // ✅ Atualiza posição e animação
+    public void update(float delta) {
+        //sprite.setRegion((delta));
+
+        sprite.setSize(40f / PPM, 25f / PPM);
         sprite.setPosition(
             body.getPosition().x - sprite.getWidth() / 2f,
             body.getPosition().y - sprite.getHeight() / 2f
         );
+
     }
 
     public void draw(SpriteBatch batch) {
@@ -105,7 +117,6 @@ public class Player {
 
     public Body getBody() { return body; }
     public void setGrounded(boolean g) { this.isGrounded = g; }
-    public boolean isGrounded() { return this.isGrounded; }
 
     public void resetPosition(float xpx, float ypx) {
         body.setTransform(xpx / PPM, ypx / PPM, 0);
@@ -114,10 +125,6 @@ public class Player {
     }
 
     public void dispose() {
-        if (texture != null) texture.dispose();
-    }
 
-    public Sprite getSprite() {
-        return sprite;
     }
 }

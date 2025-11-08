@@ -9,5 +9,7 @@ gameover.png
 queijo.png
 queijoestragado.png
 ratoAndar1.PNG
+ratoAndar2.PNG
+ratoFrente3.png
 ratoeira.png
 telainicial.png
