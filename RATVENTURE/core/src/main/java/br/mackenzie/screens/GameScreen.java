@@ -18,6 +18,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +27,14 @@ import java.util.List;
 import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 public class GameScreen implements Screen {
 
     private final Main game;
     private OrthographicCamera hudCamera;
     private OrthographicCamera camera;
-    private FitViewport viewport;
+    private ExtendViewport viewport;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
 
@@ -70,6 +73,9 @@ public class GameScreen implements Screen {
     private final float MAP_WIDTH_PX = 3200f;
     private final float MAP_HEIGHT_PX = 672f;
     private final float GRAVITY = -10f;
+    // Tamanho da tela (mais fácil de editar)
+    private static final float WORLD_WIDTH = 1280;
+    private static final float WORLD_HEIGHT = 720;
 
 
     public GameScreen(Main game) {
@@ -82,7 +88,9 @@ public class GameScreen implements Screen {
         b2dr = new Box2DDebugRenderer();
 
         camera = new OrthographicCamera();
-        viewport = new FitViewport(20f, 15f, camera);
+        // viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
+        viewport = new ExtendViewport(200 / Player.PPM, 200 / Player.PPM, camera);
+        viewport.apply();
 
         hudCamera = new OrthographicCamera();
         hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -172,12 +180,11 @@ public class GameScreen implements Screen {
                 resetGame();
             }
         }
-
         updateCamera();
 
         // --- Renderiza o mapa e entidades ---
         ScreenUtils.clear(Color.BLACK);
-        mapRenderer.setView(camera);
+        // mapRenderer.setView(camera);
         mapRenderer.render();
 
         batch.setProjectionMatrix(camera.combined);
@@ -223,6 +230,7 @@ public class GameScreen implements Screen {
     }
 
     private void updateCamera() {
+        viewport.apply();
         float mapWidth = MAP_WIDTH_PX / Player.PPM;
         float mapHeight = MAP_HEIGHT_PX / Player.PPM;
 
@@ -237,6 +245,7 @@ public class GameScreen implements Screen {
 
         camera.position.set(targetX, targetY, 0);
         camera.update();
+        mapRenderer.setView(camera);
     }
 
     @Override
