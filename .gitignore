@@ -1,5 +1,5 @@
 ## Gradle:
-RATVENTURE/.gradle/
+.gradle/
 gradle-app.setting
 /build/
 /android/build/
