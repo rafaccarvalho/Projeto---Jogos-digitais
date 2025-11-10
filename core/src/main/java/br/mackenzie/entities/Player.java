@@ -23,9 +23,9 @@ public class Player {
     private boolean facingRight = true;
 
 
-    private final float moveSpeed = 550f;
+    private final float moveSpeed = 2000f;
     private final float jumpImpulse = 10f;
-    private final float maxWalkVel = 4f;
+    private final float maxWalkVel = 6f;
 
     public Player(World world, float startXpx, float startYpx) {
         this.world = world;
