@@ -14,6 +14,12 @@ gradle-app.setting
 /server/build/
 /shared/build/
 
+## IntelliJ, Android Studio:
+.idea/
+*.ipr
+*.iws
+*.iml
+
 ## Java:
 *.class
 *.war

@@ -14,6 +14,8 @@ public class Player {
     private World world;
     private Body body;
     private Sprite sprite;
+    private int vida = 100;
+    private int vidaMax = 100;
 
     private Texture texIdle , texRight , textLeft;
 
@@ -99,7 +101,7 @@ public class Player {
         }
     }
 
-    // ✅ Atualiza posição e animação
+    // Atualiza posição e animação
     public void update(float delta) {
         //sprite.setRegion((delta));
 
@@ -126,5 +128,17 @@ public class Player {
 
     public void dispose() {
 
+    }
+
+    public int getVida() {
+        return vida;
+    }
+
+    public void setVida(int vida) {
+        this.vida = vida;
+    }
+
+    public int getVidaMax() {
+        return vidaMax;
     }
 }

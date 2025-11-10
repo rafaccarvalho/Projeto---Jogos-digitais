@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import br.mackenzie.Main;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class StartScreen implements Screen {
@@ -54,7 +53,7 @@ public class StartScreen implements Screen {
         batch.end();
 
         if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.ENTER)) {
-            game.setScreen(new GameScreen(game));
+            game.setScreen(new GameScreen1(game));
         }
     }
 
