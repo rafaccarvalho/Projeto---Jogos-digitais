@@ -1,10 +1,10 @@
 package br.mackenzie.screens;
 
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -27,7 +27,7 @@ import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
 
-public class GameScreen implements Screen {
+public class GameScreen2 implements Screen {
 
     private final Main game;
     private OrthographicCamera hudCamera;
@@ -52,7 +52,6 @@ public class GameScreen implements Screen {
     private Cheese cheese;
     private RottenCheese rotten;
     private Trap trap;
-    // Lista para gerenciar todos os objetos que podem ser coletados/destruídos
     private List<Collectible> collectibles;
 
     // HUD / status
@@ -68,15 +67,11 @@ public class GameScreen implements Screen {
     private float gameOverTimer = 0;
 
     // Mapa (em Pixels)
-    private final float MAP_WIDTH_PX = 3900f;
+    private final float MAP_WIDTH_PX = 3900f; // ajuste se necessário
     private final float MAP_HEIGHT_PX = 672f;
     private final float GRAVITY = -10f;
-    // Tamanho da tela (mais fácil de editar)
-    private static final float WORLD_WIDTH = 1280;
-    private static final float WORLD_HEIGHT = 720;
 
-
-    public GameScreen(Main game) {
+    public GameScreen2(Main game) {
         this.game = game;
     }
 
@@ -86,7 +81,6 @@ public class GameScreen implements Screen {
         b2dr = new Box2DDebugRenderer();
 
         camera = new OrthographicCamera();
-        // viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         viewport = new ExtendViewport(200 / Player.PPM, 200 / Player.PPM, camera);
         viewport.apply();
 
@@ -97,7 +91,7 @@ public class GameScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         mapLoader = new TmxMapLoader();
-        map = mapLoader.load("esgoto.tmx");
+        map = mapLoader.load("mapafase2.tmx"); // <<< arquivo da fase 2
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1f / Player.PPM);
 
         createMapBodiesFromLayer2();
@@ -109,7 +103,6 @@ public class GameScreen implements Screen {
         rotten = new RottenCheese(world, playerStartX + 900f, playerStartY + 20f);
         trap = new Trap(world, playerStartX + 1200f, playerStartY);
 
-        // Inicializa a lista de colecionáveis
         collectibles = new ArrayList<>();
         collectibles.add(cheese);
         collectibles.add(rotten);
@@ -131,7 +124,7 @@ public class GameScreen implements Screen {
         FixtureDef fdef = new FixtureDef();
 
         if (map.getLayers().getCount() <= 2) {
-            Gdx.app.error("GameScreen", "Layer 2 não existe no mapa. Colisão do chão pode falhar.");
+            Gdx.app.error("GameScreen2", "Layer 2 não existe no mapa. Colisão do chão pode falhar.");
             return;
         }
 
@@ -153,18 +146,14 @@ public class GameScreen implements Screen {
         shape.dispose();
     }
 
-
     @Override
     public void render(float delta) {
-        // --- Atualização lógica ---
+        // lógica
         if (!gameOver) {
             player.handleInput();
             player.update(Gdx.graphics.getDeltaTime());
 
-            for (Collectible item : collectibles) {
-                item.update();
-            }
-            //player.update();
+            for (Collectible item : collectibles) item.update();
 
             world.step(1 / 60f, 6, 2);
             gameContactListener.processDestructions();
@@ -176,30 +165,30 @@ public class GameScreen implements Screen {
         } else {
             gameOverTimer -= delta;
             if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-                game.setScreen(new GameScreen(game));
+                game.setScreen(new GameScreen2(game));
             }
         }
+
         updateCamera();
 
-        // --- Checa se o jogador chegou ao fim do mapa ---
-        float playerX = player.getBody().getPosition().x * Player.PPM; // posição em pixels
-        if (playerX >= MAP_WIDTH_PX - 100) { // chegou perto do fim
-            game.setScreen(new GameScreen2(game)); // vai pra próxima fase
+        // se chega no fim do mapa troca para próxima fase (ajuste o valor se quiser)
+        float playerX = player.getBody().getPosition().x * Player.PPM;
+        if (playerX >= MAP_WIDTH_PX - 100) {
+            // use a próxima screen que você implementar; por agora vamos voltar ao menu ou reiniciar
+            // game.setScreen(new GameScreen3(game));
+            game.setScreen(new GameScreen(game)); // volta pra GameScreen (ou troque para GameScreen3)
             dispose();
             return;
         }
 
-        // --- Renderiza o mapa e entidades ---
+        // render
         ScreenUtils.clear(Color.BLACK);
-        // mapRenderer.setView(camera);
+        mapRenderer.setView(camera);
         mapRenderer.render();
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-
-        for (Collectible item : collectibles) {
-            item.draw(batch);
-        }
+        for (Collectible item : collectibles) item.draw(batch);
         player.draw(batch);
 
         if (gameOver) {
@@ -207,36 +196,18 @@ public class GameScreen implements Screen {
             float vy = camera.position.y - viewport.getWorldHeight() / 2f;
             batch.draw(gameOverTexture, vx, vy, viewport.getWorldWidth(), viewport.getWorldHeight());
         }
-
         batch.end();
 
-        // --- Renderização do HUD ---
-        if(!gameOver) {
+        if (!gameOver) {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             hudCamera.update();
-
-
-            // Define projeção fixa (tela)
             batch.setProjectionMatrix(hudCamera.combined);
             shapeRenderer.setProjectionMatrix(hudCamera.combined);
-
-            // Desenha o HUD (barra e textos)
             hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, pontuacao);
-
             Gdx.gl.glDisable(GL20.GL_BLEND);
         }
 
-        // --- Debug Box2D ---
         b2dr.render(world, camera.combined);
-    }
-
-
-
-
-    private void resetGame() {
-        // Para uma reinicialização LIMPA, o ideal é recriar o mundo e as entidades
-        this.dispose();
-        this.show();
     }
 
     private void updateCamera() {
@@ -280,22 +251,20 @@ public class GameScreen implements Screen {
         if (map != null) map.dispose();
         if (b2dr != null) b2dr.dispose();
         if (mapRenderer != null) mapRenderer.dispose();
-        // Não precisamos destruir explicitamente os bodies se chamarmos world.dispose()
     }
+
+    // inner listener reusando o padrão do seu GameScreen (ContactListener)
     private static class CustomContactListener implements ContactListener {
-        private final GameScreen screen;
-        // Lista de Collectible que devem ser destruídos no próximo passo
+        private final GameScreen2 screen;
         private final List<Collectible> itemsToRemove = new ArrayList<>();
 
-        public CustomContactListener(GameScreen screen) {
+        public CustomContactListener(GameScreen2 screen) {
             this.screen = screen;
         }
 
-        // Chamado APÓS world.step()
         public void processDestructions() {
             for (Collectible item : itemsToRemove) {
                 if (item.getBody() != null) {
-                    // 🔒 desativa antes de destruir
                     item.getBody().setActive(false);
                     screen.world.destroyBody(item.getBody());
                     item.body = null;
@@ -313,7 +282,6 @@ public class GameScreen implements Screen {
 
             if (dataA == null || dataB == null) return;
 
-            // --- Player/Foot vs Ground ---
             boolean isFoot = dataA.equals("foot") || dataB.equals("foot");
             boolean isGround = dataA.equals("ground") || dataB.equals("ground");
 
@@ -321,7 +289,6 @@ public class GameScreen implements Screen {
                 screen.player.setGrounded(true);
             }
 
-            // --- Player vs Collectible ---
             boolean isPlayerBody = dataA.equals("player") || dataB.equals("player");
             if (!isPlayerBody) return;
 
@@ -336,8 +303,6 @@ public class GameScreen implements Screen {
                 if (c.ativo) {
                     screen.pontuacao++;
                     screen.vidaRato = Math.min(screen.VIDA_MAX, screen.vidaRato + screen.VIDA_POR_QUEIJO);
-
-                    // 🔒 não destruir agora — apenas marcar e adicionar à fila
                     c.ativo = false;
                     itemsToRemove.add(c);
                 }
@@ -353,14 +318,12 @@ public class GameScreen implements Screen {
                 if (t.ativo) {
                     screen.vidaRato = 0;
                     t.ativo = false;
-                    // traps não são removidas
                 }
             }
 
             if (screen.vidaRato <= 0) {
                 screen.gameOver = true;
                 screen.gameOverTimer = 1.5f;
-
             }
         }
 

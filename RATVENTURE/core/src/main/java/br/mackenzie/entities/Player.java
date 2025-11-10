@@ -21,7 +21,7 @@ public class Player {
     private boolean facingRight = true;
 
 
-    private final float moveSpeed = 55f;
+    private final float moveSpeed = 550f;
     private final float jumpImpulse = 10f;
     private final float maxWalkVel = 4f;
 

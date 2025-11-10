@@ -6,6 +6,7 @@ Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks.tsx
 esgoto.tmx
 fundoesgoto.png
 gameover.png
+mapafase2.tmx
 queijo.png
 queijoestragado.png
 ratoAndar1.PNG
