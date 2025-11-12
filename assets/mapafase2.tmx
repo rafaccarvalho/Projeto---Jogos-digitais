@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="240" height="17" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="51">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="240" height="17" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="75">
  <tileset firstgid="1" source="Nintendo Switch - Super Mario Maker 2 - Super Mario World - Backgrounds (SMW).tsx"/>
  <tileset firstgid="42901" source="Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks.tsx"/>
  <layer id="1" name="background" width="240" height="17">
@@ -9,7 +9,7 @@
  </layer>
  <layer id="2" name="chão" width="240" height="17">
   <data encoding="base64" compression="zlib">
-   eJztmEtuwyAQhn2PnrvduIvsSNts3H2TSpF6gTzu0DSHyFiRVZQEZhgMGOv/pF/IDzAPz/zYTQMAAAAAAAAAAAAAAAAAAFAWY5pmSXojvZvSvQEAhPBFMbsmbUjfheJ3a/4FQAj2u+NSTP2ps6M+7kkH0tHRX8m4ahy7lJrHRf1d2HJdk5yvCUlc17Kuvj3yLx2fSH+k84THUIqW5uTV3Jdj82OuAuAWbo/8TOdeEr87JfOd9rn9vR3p80HpakeT3/u4fVrq49fnsbUyVa8c8neot/vyPvcPitsjf9C51Uxzv9Y/XfVS+PAQv73AtBny95j1OH/l9sg5/LcEGv/k6oW0IwXxWw+tcr19+V7yD8oXo3P03xj/3Arq2fuoWBC/9dAp19vnv5J/UL4YnZv/xvpnSf+V5g1tGYuVtxYh4p5farxjtHv7DtjHku/fHi4GQ/1XOh+57svpnyn9l2tPmje0ZSwpvv/s67nHm2seuXrcHjjUf6X9znVfyDyO4Z+p19FVXgAengTy
+   eJztmE1uwjAQhXOPnptu6IKdaWED+/5ISL0AtHeA9hCdqIpqUewZj2NPHL1PerJiYsc/mXkmXQcAAAAAAAAAAAAAAAAAAGCLc123Jj2Snpz1aAAAKTxTzL6QXklvRvF7cH8CIAX/3Qkpp/3UOdIYT6QP0mdgvJJ5tTh3KS3Pi8a78hX6TVLfEpK4bmVfY2fkM11fSF+k7wnPwYolrcmD+1+Ozbv7FQDXcGfkBdXdF353LPOd9rn9vTvS/kYZ6keT3/u4vVvr4zfmsa0yVa8c8neqt8fyPvcNijsjb6huO9Pcr/XPULsSPjzEby8wbXbKPR/y/i04f+XOyDX81wKNf3LtUvqRgvhth6Vyv2P5XvINKhajc/TfHP88CNr556hcEL/tUMJ/Jd+gYjE6N//N9U9L/5XmDW2Zi5e3Vininm813zH6vX4H/GvJ/98eLgZT/Ve6HrXuq+mfJf2X60+aN7RlLtp+uHZW8621jlw77gyc6r/Scde6L2Udx/DP0vsYKn8ADzADmQ==
   </data>
  </layer>
  <objectgroup id="3" name="block">
@@ -18,22 +18,18 @@
   <object id="4" x="319.75" y="144" width="64" height="15.25"/>
   <object id="5" x="433" y="144.25" width="47.5" height="15.5"/>
   <object id="6" x="529.25" y="144.75" width="45.5" height="16.5"/>
-  <object id="7" x="639.25" y="240.75" width="32.5" height="31.75"/>
-  <object id="11" x="671.5" y="240.75" width="193" height="16"/>
-  <object id="12" x="865" y="240.5" width="30.5" height="32"/>
+  <object id="11" x="641.5" y="241.25" width="252" height="15.5"/>
   <object id="13" x="992" y="240" width="352.5" height="31.5"/>
   <object id="14" x="1056.33" y="176.333" width="127.333" height="15"/>
   <object id="15" x="1216.33" y="129" width="143" height="15.5"/>
   <object id="16" x="1312.25" y="144.417" width="205.667" height="14.3333"/>
   <object id="17" x="1472.5" y="128.25" width="128.5" height="16"/>
   <object id="18" x="1472.75" y="240" width="193.25" height="31.75"/>
-  <object id="19" x="1664.5" y="176.25" width="31.75" height="33.25"/>
   <object id="20" x="1666" y="239.75" width="29" height="31.5"/>
   <object id="22" x="1744.75" y="240.5" width="14.75" height="14.5"/>
   <object id="23" x="1808.75" y="240.75" width="15.5" height="15.5"/>
   <object id="24" x="1856.25" y="241" width="32.75" height="15.25"/>
-  <object id="26" x="1890" y="176.5" width="29" height="94"/>
-  <object id="27" x="1696.25" y="176.25" width="193.25" height="16.25"/>
+  <object id="27" x="1665.13" y="177.125" width="253.5" height="13.5"/>
   <object id="28" x="2001" y="176.25" width="62.25" height="64"/>
   <object id="29" x="2128.25" y="144.25" width="63.25" height="65"/>
   <object id="30" x="2241" y="95.5" width="63.25" height="63.75"/>
@@ -44,14 +40,22 @@
   <object id="35" x="2656.5" y="240" width="95" height="31"/>
   <object id="36" x="2656.25" y="159.75" width="79.25" height="16.5"/>
   <object id="37" x="2768.25" y="112" width="47.75" height="16.5"/>
-  <object id="38" x="2816" y="240.5" width="186.75" height="31.25"/>
-  <object id="45" x="3360.73" y="271.636">
-   <polygon points="0,0 -0.181818,-16 -16,-15.4545 -16.1818,-79.4545 0,-79.0909 0,-94.9091 15.4545,-95.2727 15.2727,-110.909 31.0909,-110.909 31.0909,-127.636 47.6364,-127.455 47.6364,-142.727 111.091,-142.909 111.273,-127.091 126.364,-127.273 127.273,-112 142.364,-112 142.545,-95.8182 159.273,-95.8182 159.455,-79.6364 174.545,-79.4545 175.273,-16.3636 159.818,-15.8182 160,0.363636"/>
-  </object>
+  <object id="38" x="2816" y="240.5" width="192.25" height="31.25"/>
   <object id="46" x="3584.91" y="160.545" width="111.091" height="15.6364"/>
   <object id="47" x="3712.55" y="239.818" width="127.455" height="31.6364"/>
-  <object id="49" x="3808.73" y="145.455">
-   <polygon points="0,0 30.9091,-0.727273 30.9091,93.6364 15.0909,94 15.6364,29.8182 -0.545455,29.8182"/>
-  </object>
+  <object id="57" x="3088.75" y="224.5" width="192" height="47.75"/>
+  <object id="58" x="3105.25" y="208.75" width="158" height="17.25"/>
+  <object id="59" x="3121" y="192.75" width="125.75" height="17.5"/>
+  <object id="60" x="3137" y="176.25" width="94.25" height="18.75"/>
+  <object id="61" x="3153.5" y="161" width="61.75" height="17.5"/>
+  <object id="63" x="3344.75" y="193.25" width="190.5" height="61.25"/>
+  <object id="64" x="3376.75" y="160.5" width="126.25" height="19.75"/>
+  <object id="65" x="3360.75" y="176.75" width="157.75" height="22.75"/>
+  <object id="66" x="3393.25" y="145.5" width="93.5" height="17.75"/>
+  <object id="67" x="3409" y="129.5" width="63.5" height="18.5"/>
+  <object id="68" x="3361" y="251.25" width="159.25" height="20"/>
+  <object id="69" x="3809" y="144" width="31.5" height="32.5"/>
+  <object id="70" x="3823.25" y="176.5" width="17.5" height="62.75"/>
+  <object id="73" x="1889.25" y="190.75" width="29.75" height="80.5"/>
  </objectgroup>
 </map>
