@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="240" height="17" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="58">
+ <tileset firstgid="1" source="Nintendo Switch - Super Mario Maker 2 - Super Mario World - Backgrounds (SMW).tsx"/>
+ <tileset firstgid="42901" source="Virtual Boy - Virtual Boy Wario Land - Miscellaneous - Blocks.tsx"/>
+ <layer id="1" name="background" width="240" height="17">
+  <data encoding="base64" compression="zlib">
+   eJzt10W3UGUAQNErHQJKiBKCojQi3Q3SoIT0eyjdKWX3WnYTSjcKCCgdSkh3SncqDSoguP+Dd/gN9viMz/5WUXSAgxziMEc4yjGOc4KTnOI0ZzjLOc5zgT/4k4tc4jJXuMo1rnODm/zF/tAN3dD9393KraOoClWpRnVqUJNaPENt6lCXetSnAQ1pRGOe5Tma0JRmNOd5WtCSVrSmTevQDd3QjaM7gYlMYjJTmMo0pjOD7/mBmcxiNj8yh7nM4yd+Zj4LWMgiFrOEpSxjOStCN3RDN5ZuijZRlJJUpCYNabmfdKQnAw/wIBnJRGay8BBZeZhHyEZ2cpCTR8lFbh7jcfK0Cd3QDd04ut3pQU960Zs+9KUf/RnAQF5iEIMZwlCG8TKv8Cqv8Tpv8CZv8Tbv8C7v8X7ohm7oxtLdwla2sZ0d7GQXu9nDXvbxO/s5wEEOcZgjHOUYxznBSU5xmjOc5RznuRC6oRu6sXSLt42iEpSkFKUpQ1nKUZ4KVKQSlalCVapRnRrUpBbPUJs61KUe9WlAQxrRuG3ohm7oxtH9huGMYCSj+JbvGM0YxjKO8UxgIpOYzBSmMo3pzOB7fmAms5jNj8xhLvNCN3RDN5buLW5zh3+5yz2idlF0H0lISjKSk4KUpCI1aUjL/aQjPRl4gAfJSCYyk4WHyNoudEM3dOPoJpBIe17gRTrQkU50pgtd6UZ3etCTXvSmD33pR38GMJCXGMRghjCUYbwcuqEburF0V7KK1azhN9ayjvVsYCOb2MwWtrKN7exgJ7vYzR72so/f2c8BDnKIwxwJ3dAN3Vi6eROiKB/5KUBBClGYIjxFUZ6mGMUpQUlKUZoylKUc5alARSpRmSpUpRrVqZEQuqEbunF0P+BDPuJjPuFTPuNzvuBLvuJrvmE4IxjJKL7lO0YzhrGMYzwTmMgkJjOFqaEbuqEbS/cil7jMFa5yjevc4CZ/8Tf/cIvb3OFf7nKPKNGnk4SkJCM5KUhJKlKThrSJoRu6oRtHtwlNaUZznqcFLWlFa9rQlnYkkEh7XuBFOtCRTnSmC13pRnd60JNe9KZP6IZu6MbSnc8CFrKIxSxhKctYzgp+4VdWsorVrOE31rKO9WxgI5vYzBa2so3t7GBn6IZu6MbSzdY+irKTg5w8Si5y8xiPk4cneJK85CM/BShIIQpThKcoytMUozglKEkpSlOmfeiGbujG0f0P9AWbHA==
+  </data>
+ </layer>
+ <layer id="2" name="ground" width="240" height="17">
+  <data encoding="base64" compression="zlib">
+   eJztmlEOgyAMhr3Hzr+xO7gXX+Z2q+kDkSHQIogF/i8hLMEspfSrW3QYQC98FH8AAGRh+jk5BvwFQC6muy4m+AuAWELuaib4C4BIKHdjrwMAlAP+gh75qm0AAOQDZwGQT4qnkh03Y/PFF7MucY+gL2qtQ/MZrU2MX/j/G8fZ/evo985qG2eSc992LkN5rfG+EXI0tBbDzHx+FKqLWvLZKuvZ3J556sHFmb2qBXwuUo6+M+xf9+zQ+xsl+ro0aur32l/tcCql9iw9rza+egh5GnI0p7+z+o9DjyO/y2qp+9xwnc/dG0x/1yGF+xLXQ+1nDbV3+/or4Mbge7+ppL/UKI2rn92NOkg5W6q2akKKv3YOx+XzS+1nDeWvff0VcGPo3V+uO6NRB768chynaqsmbH99vYmaY/H5mhtuvCnrqblo3V/qDHKeO8fxmqE89PUmao6lVM/jxpuynpqL1v1t6X53NZSHPyhFD30=
+  </data>
+ </layer>
+ <objectgroup id="3" name="block">
+  <object id="2" x="2384.67" y="242" width="94" height="30.6667"/>
+  <object id="3" x="2426.67" y="382.667" width="0.666667" height="0.666667"/>
+  <object id="4" x="-0.333333" y="240" width="224.333" height="32"/>
+  <object id="5" x="255.667" y="192" width="33" height="15.6667"/>
+  <object id="6" x="320" y="176" width="32.6667" height="15.6667"/>
+  <object id="7" x="367.333" y="159.333" width="33.6667" height="16.6667"/>
+  <object id="8" x="416" y="240" width="32.6667" height="31.3333"/>
+  <object id="9" x="480.667" y="224.333" width="33" height="32.6667"/>
+  <object id="10" x="544" y="208.333" width="96.3333" height="32"/>
+  <object id="11" x="672.667" y="160.333" width="112" height="16.3333"/>
+  <object id="12" x="672.333" y="177" width="15.3333" height="63"/>
+  <object id="13" x="799.667" y="207.667" width="33.3333" height="32"/>
+  <object id="14" x="832.333" y="240" width="95.6667" height="32.3333"/>
+  <object id="18" x="848.667" y="160" width="64" height="17"/>
+  <object id="19" x="944.333" y="144" width="32" height="16.6667"/>
+  <object id="20" x="992" y="240.333" width="64" height="31.6667"/>
+  <object id="21" x="1023.67" y="128.333" width="48" height="15.3333"/>
+  <object id="22" x="1120.33" y="111.667" width="47.6667" height="15.3333"/>
+  <object id="23" x="1168.33" y="96.3333" width="48.3333" height="15.6667"/>
+  <object id="24" x="1119.67" y="240.667" width="65" height="32"/>
+  <object id="25" x="1231" y="240" width="66.3333" height="32.6667"/>
+  <object id="26" x="1265" y="128.333" width="46.6667" height="15.6667"/>
+  <object id="27" x="1328.67" y="207.667" width="32" height="33"/>
+  <object id="28" x="1376.33" y="193" width="47" height="15.3333"/>
+  <object id="29" x="1472.67" y="177" width="46.3333" height="30"/>
+  <object id="30" x="1568.33" y="160.333" width="48.3333" height="31.6667"/>
+  <object id="31" x="1680.67" y="145" width="48.3333" height="31"/>
+  <object id="32" x="1792" y="144.667" width="47" height="14.6667"/>
+  <object id="33" x="1887" y="128" width="66" height="16.6667"/>
+  <object id="34" x="2030.67" y="127.667" width="49.3333" height="15"/>
+  <object id="35" x="2161.67" y="128" width="63.6667" height="17"/>
+  <object id="36" x="2239.67" y="160" width="17" height="14.3333"/>
+  <object id="37" x="2304.33" y="191.667" width="48.6667" height="16.3333"/>
+  <object id="38" x="2511" y="224" width="18.6667" height="32"/>
+  <object id="39" x="2592.67" y="208.667" width="15" height="15.6667"/>
+  <object id="40" x="2672.33" y="208.333" width="64.3333" height="32.3333"/>
+  <object id="41" x="2816.33" y="224.667" width="65.6667" height="32.6667"/>
+  <object id="42" x="2960" y="208.667" width="97.6667" height="31"/>
+  <object id="43" x="3087.33" y="176.667" width="66.3333" height="16"/>
+  <object id="44" x="3184.67" y="143.667" width="65" height="15.6667"/>
+  <object id="46" x="3295.67" y="192.333" width="65.3333" height="15.6667"/>
+  <object id="47" x="3455.33" y="191.333" width="66.6667" height="18"/>
+  <object id="48" x="3567" y="144.667" width="32.6667" height="14.6667"/>
+  <object id="53" x="3712.33" y="240.333" width="127.333" height="31.6667"/>
+  <object id="54" x="3793.67" y="145.667" width="45.6667" height="15.6667"/>
+  <object id="55" x="3808.33" y="162.333" width="31.3333" height="76.6667"/>
+ </objectgroup>
+</map>
