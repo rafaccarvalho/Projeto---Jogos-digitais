@@ -26,6 +26,8 @@ import java.util.List;
 import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
+// IMPORTAÇÃO DA INTERFACE (MÓDULO CORE)
+import br.mackenzie.input.IPedalController;
 
 public abstract class BaseGameScreen implements Screen {
 
@@ -48,6 +50,9 @@ public abstract class BaseGameScreen implements Screen {
     protected HUD hud;
     protected Texture gameOverTexture;
 
+    // ALTERADO: Usa a interface
+    protected IPedalController pedalController;
+
     protected int pontuacao = 0;
     protected int vidaRato;
     protected int VIDA_MAX;
@@ -60,18 +65,26 @@ public abstract class BaseGameScreen implements Screen {
 
     protected final float MAP_WIDTH_PX = 3900f;
     protected final float MAP_HEIGHT_PX = 672f;
-    protected final float GRAVITY = -10f;
+    protected final float GRAVITY = -7f;
     protected static final float WORLD_WIDTH = 1280;
     protected static final float WORLD_HEIGHT = 720;
 
-    // 🔹 Cada fase define o nome do mapa aqui
+    // Cada fase define o nome do mapa
     protected abstract String getMapPath();
 
-    // 🔹 Cada fase pode dizer qual a próxima fase (ou null se for a última)
+    // Próxima fase (ou null)
     protected abstract Screen getNextScreen();
 
+    // CONSTRUTOR ANTIGO (MANTIDO PARA COMPATIBILIDADE, MAS PODE SER REMOVIDO)
+    // Se mantido, você deve instanciar o controlador em outro lugar ou usar injeção.
     public BaseGameScreen(Main game) {
         this.game = game;
+    }
+
+    // NOVO CONSTRUTOR: Recebe o controlador como dependência (Injeção)
+    public BaseGameScreen(Main game, IPedalController pedalController) {
+        this.game = game;
+        this.pedalController = pedalController;
     }
 
     @Override
@@ -94,6 +107,7 @@ public abstract class BaseGameScreen implements Screen {
         map = mapLoader.load(getMapPath());
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1f / Player.PPM);
 
+        // Cria corpos do mapa (layer 2) — importante para colisões de chão
         createMapBodiesFromLayer2();
 
         float playerStartX = 200f, playerStartY = 120f;
@@ -108,6 +122,8 @@ public abstract class BaseGameScreen implements Screen {
 
         hud = new HUD();
         gameOverTexture = new Texture("gameover.png");
+
+        // REMOVIDO: pedalController = new PedalController(); // Agora é injetado
 
         gameContactListener = new CustomContactListener(this);
         world.setContactListener(gameContactListener);
@@ -144,12 +160,28 @@ public abstract class BaseGameScreen implements Screen {
     @Override
     public void render(float delta) {
         if (!gameOver) {
+            // 1) lidar com entradas que aplicam impulso (player.handleInput aplica impulses)
             player.handleInput();
-            player.update(Gdx.graphics.getDeltaTime());
+
+            // 2) atualizar leitura do pedal e passar para o player (Verifica se foi injetado)
+            if (pedalController != null) {
+                pedalController.update(delta);
+                player.setPedalVelocity(pedalController.getPedalValue());
+            }
+
+            // 3) atualização visual temporal (coletáveis atualizam independentes do world.step)
             for (Collectible item : collectibles) item.update();
+
+            // 4) passar o tempo da física
             world.step(1 / 60f, 6, 2);
+
+            // 5) processar destruições marcadas no ContactListener
             gameContactListener.processDestructions();
 
+            // 6) atualizar estado do jogador baseado na física (posição do sprite)
+            player.update(Gdx.graphics.getDeltaTime());
+
+            // verificar game over por vida
             if (vidaRato <= 0) {
                 gameOver = true;
                 gameOverTimer = 1.5f;
@@ -233,15 +265,18 @@ public abstract class BaseGameScreen implements Screen {
     public void dispose() {
         batch.dispose();
         if (gameOverTexture != null) gameOverTexture.dispose();
-        player.dispose();
+        //player.dispose();
         if (hud != null) hud.dispose();
         if (world != null) world.dispose();
         if (map != null) map.dispose();
         if (b2dr != null) b2dr.dispose();
         if (mapRenderer != null) mapRenderer.dispose();
+
+        // Chamada de dispose() no controlador injetado
+        if (pedalController != null) pedalController.dispose();
     }
 
-    // 🔹 Listener interno mantido igual
+    // Listener interno (restaurado)
     protected static class CustomContactListener implements ContactListener {
         private final BaseGameScreen screen;
         private final List<Collectible> itemsToRemove = new ArrayList<>();
@@ -285,8 +320,6 @@ public abstract class BaseGameScreen implements Screen {
                 if (c.ativo) {
                     screen.pontuacao++;
                     screen.vidaRato = Math.min(screen.VIDA_MAX, screen.vidaRato + screen.VIDA_POR_QUEIJO);
-
-                    // não destruir agora — apenas marcar e adicionar à fila
                     c.ativo = false;
                     itemsToRemove.add(c);
                 }
@@ -312,7 +345,8 @@ public abstract class BaseGameScreen implements Screen {
             }
         }
 
-        @Override public void endContact(Contact contact) {
+        @Override
+        public void endContact(Contact contact) {
             Fixture a = contact.getFixtureA(), b = contact.getFixtureB();
             Object da = a.getUserData(), db = b.getUserData();
             if (da == null || db == null) return;
