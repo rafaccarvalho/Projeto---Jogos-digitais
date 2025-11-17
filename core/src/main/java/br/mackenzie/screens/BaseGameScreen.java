@@ -3,13 +3,13 @@ package br.mackenzie.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -19,6 +19,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.math.MathUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,6 @@ import java.util.List;
 import br.mackenzie.Main;
 import br.mackenzie.entities.*;
 import br.mackenzie.ui.HUD;
-// IMPORTAÇÃO DA INTERFACE (MÓDULO CORE)
 import br.mackenzie.input.IPedalController;
 
 public abstract class BaseGameScreen implements Screen {
@@ -50,10 +50,11 @@ public abstract class BaseGameScreen implements Screen {
     protected HUD hud;
     protected Texture gameOverTexture;
 
-    // ALTERADO: Usa a interface
     protected IPedalController pedalController;
 
-    protected int pontuacao = 0;
+    // 🎧 Música da fase
+    protected Music gameMusic;
+
     protected int vidaRato;
     protected int VIDA_MAX;
     protected final int VIDA_POR_QUEIJO = 20;
@@ -63,25 +64,29 @@ public abstract class BaseGameScreen implements Screen {
     protected boolean gameOver = false;
     protected float gameOverTimer = 0;
 
-    protected final float MAP_WIDTH_PX = 3900f;
-    protected final float MAP_HEIGHT_PX = 672f;
+    //protected final float MAP_WIDTH_PX = 3900f;
+    //protected final float MAP_HEIGHT_PX = 672f;
+    protected float mapWidthPx = 0f;
+    protected float mapHeightPx = 0f;
     protected final float GRAVITY = -7f;
-    protected static final float WORLD_WIDTH = 1280;
-    protected static final float WORLD_HEIGHT = 720;
 
-    // Cada fase define o nome do mapa
     protected abstract String getMapPath();
-
-    // Próxima fase (ou null)
     protected abstract Screen getNextScreen();
+    protected abstract BaseGameScreen newInstance();
 
-    // CONSTRUTOR ANTIGO (MANTIDO PARA COMPATIBILIDADE, MAS PODE SER REMOVIDO)
-    // Se mantido, você deve instanciar o controlador em outro lugar ou usar injeção.
+    // Garante que a música nunca duplica
+    private void stopMusicIfPlaying() {
+        if (gameMusic != null) {
+            try {
+                gameMusic.stop();
+            } catch (Exception ignored) {}
+        }
+    }
+
     public BaseGameScreen(Main game) {
         this.game = game;
     }
 
-    // NOVO CONSTRUTOR: Recebe o controlador como dependência (Injeção)
     public BaseGameScreen(Main game, IPedalController pedalController) {
         this.game = game;
         this.pedalController = pedalController;
@@ -89,6 +94,9 @@ public abstract class BaseGameScreen implements Screen {
 
     @Override
     public void show() {
+
+        stopMusicIfPlaying();
+
         world = new World(new Vector2(0, GRAVITY), true);
         b2dr = new Box2DDebugRenderer();
 
@@ -96,18 +104,47 @@ public abstract class BaseGameScreen implements Screen {
         viewport = new ExtendViewport(200 / Player.PPM, 200 / Player.PPM, camera);
         viewport.apply();
 
+        // 🎵 Música da fase
+        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
+        gameMusic.setLooping(true);
+        gameMusic.setVolume(0.5f);
+        gameMusic.play();
+
         hudCamera = new OrthographicCamera();
         hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
 
-        // --- Carrega o mapa da fase ---
-        TmxMapLoader mapLoader = new TmxMapLoader();
-        map = mapLoader.load(getMapPath());
+        map = new TmxMapLoader().load(getMapPath());
+
+        try {
+            Integer mapTileWidth = (Integer) map.getProperties().get("width");      // número de tiles horizontal
+            Integer mapTileHeight = (Integer) map.getProperties().get("height");    // número de tiles vertical
+            Integer tilePixelWidth = (Integer) map.getProperties().get("tilewidth");// largura do tile em px
+            Integer tilePixelHeight = (Integer) map.getProperties().get("tileheight");// altura do tile em px
+
+            if (mapTileWidth != null && tilePixelWidth != null) {
+                mapWidthPx = mapTileWidth * tilePixelWidth;
+
+                mapWidthPx += 3 * tilePixelWidth;
+            } else {
+                mapWidthPx = 3900f; // fallback
+            }
+
+            if (mapTileHeight != null && tilePixelHeight != null) {
+                mapHeightPx = mapTileHeight * tilePixelHeight;
+            } else {
+                mapHeightPx = 672f; // fallback
+            }
+        } catch (Exception e) {
+            Gdx.app.error("BaseGameScreen", "Erro lendo propriedades do mapa, usando valores padrão", e);
+            mapWidthPx = 3900f;
+            mapHeightPx = 672f;
+        }
+
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1f / Player.PPM);
 
-        // Cria corpos do mapa (layer 2) — importante para colisões de chão
         createMapBodiesFromLayer2();
 
         float playerStartX = 200f, playerStartY = 120f;
@@ -116,14 +153,14 @@ public abstract class BaseGameScreen implements Screen {
         VIDA_MAX = player.getVidaMax();
 
         collectibles = new ArrayList<>();
-        collectibles.add(new Cheese(world, playerStartX + 600f, playerStartY + 20f));
-        collectibles.add(new RottenCheese(world, playerStartX + 900f, playerStartY + 20f));
-        collectibles.add(new Trap(world, playerStartX + 1200f, playerStartY));
+
+        int numInitialCollectibles = 15;
+        for (int i = 0; i < numInitialCollectibles; i++) {
+            spawnRandomCollectible();
+        }
 
         hud = new HUD();
         gameOverTexture = new Texture("gameover.png");
-
-        // REMOVIDO: pedalController = new PedalController(); // Agora é injetado
 
         gameContactListener = new CustomContactListener(this);
         world.setContactListener(gameContactListener);
@@ -132,18 +169,43 @@ public abstract class BaseGameScreen implements Screen {
         camera.update();
     }
 
+    private void spawnRandomCollectible() {
+        int randomValue = MathUtils.random(99);
+
+        Collectible newCollectible;
+        float tempX = 100f, tempY = 150f;
+
+        if (randomValue < 40) newCollectible = new Cheese(world, tempX, tempY);
+        else if (randomValue < 70) newCollectible = new RottenCheese(world, tempX, tempY);
+        else newCollectible = new Trap(world, tempX, tempY);
+
+        newCollectible.respawnRandom();
+        collectibles.add(newCollectible);
+    }
+
+    public void applyDamage(int damage) {
+        if (damage == DANO_QUEIJO_ESTRAGADO && game.pontuacaoGlobal > 0) {
+            game.pontuacaoGlobal--;
+            return;
+        }
+
+        vidaRato -= damage;
+
+        if (vidaRato <= 0) {
+            gameOver = true;
+            gameOverTimer = 1.5f;
+        }
+    }
+
     private void createMapBodiesFromLayer2() {
         BodyDef bdef = new BodyDef();
         PolygonShape shape = new PolygonShape();
         FixtureDef fdef = new FixtureDef();
 
-        if (map.getLayers().getCount() <= 2) {
-            Gdx.app.error("GameScreen", "Layer 2 não existe no mapa. Colisão do chão pode falhar.");
-            return;
-        }
+        if (map.getLayers().getCount() <= 2) return;
 
-        for (MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)) {
-            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+        for (RectangleMapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = object.getRectangle();
             bdef.type = BodyDef.BodyType.StaticBody;
             bdef.position.set((rect.getX() + rect.getWidth() / 2f) / Player.PPM,
                 (rect.getY() + rect.getHeight() / 2f) / Player.PPM);
@@ -159,64 +221,66 @@ public abstract class BaseGameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+
         if (!gameOver) {
-            // 1) lidar com entradas que aplicam impulso (player.handleInput aplica impulses)
+
             player.handleInput();
 
-            // 2) atualizar leitura do pedal e passar para o player (Verifica se foi injetado)
             if (pedalController != null) {
                 pedalController.update(delta);
                 player.setPedalVelocity(pedalController.getPedalValue());
             }
 
-            // 3) atualização visual temporal (coletáveis atualizam independentes do world.step)
-            for (Collectible item : collectibles) item.update();
+            for (Collectible item : collectibles)
+                item.update();
 
-            // 4) passar o tempo da física
             world.step(1 / 60f, 6, 2);
 
-            // 5) processar destruições marcadas no ContactListener
             gameContactListener.processDestructions();
 
-            // 6) atualizar estado do jogador baseado na física (posição do sprite)
             player.update(Gdx.graphics.getDeltaTime());
 
-            // verificar game over por vida
             if (vidaRato <= 0) {
                 gameOver = true;
                 gameOverTimer = 1.5f;
             }
+
         } else {
             gameOverTimer -= delta;
             if (gameOverTimer <= 0 && Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+
+                stopMusicIfPlaying();
+
                 game.setScreen(newInstance());
+                return;
             }
         }
 
         updateCamera();
 
-        // --- Checa se o jogador chegou ao fim do mapa ---
         float playerX = player.getBody().getPosition().x * Player.PPM;
-        if (playerX >= MAP_WIDTH_PX - 100) {
+        float exitThreshold = Math.max(100f, mapWidthPx - 100f); // evita threshold incorreto se mapa muito pequeno
+        if (playerX >= exitThreshold) {
+            stopMusicIfPlaying();
             Screen next = getNextScreen();
             if (next != null) {
                 game.setScreen(next);
-                dispose();
-                return;
+            } else {
+                game.setScreen(new FinalScreen(game));
             }
+            dispose();
+            return;
         }
 
-        // --- Checa se o jogador caiu ---
-        if (player.getBody().getPosition().y < -2f) {
+        if (player.getBody().getPosition().y < -2f)
             vidaRato = 0;
-        }
 
-        // --- Renderização ---
         ScreenUtils.clear(Color.BLACK);
         mapRenderer.render();
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
         for (Collectible item : collectibles) item.draw(batch);
         player.draw(batch);
 
@@ -225,6 +289,7 @@ public abstract class BaseGameScreen implements Screen {
             float vy = camera.position.y - viewport.getWorldHeight() / 2f;
             batch.draw(gameOverTexture, vx, vy, viewport.getWorldWidth(), viewport.getWorldHeight());
         }
+
         batch.end();
 
         if (!gameOver) {
@@ -232,17 +297,15 @@ public abstract class BaseGameScreen implements Screen {
             hudCamera.update();
             batch.setProjectionMatrix(hudCamera.combined);
             shapeRenderer.setProjectionMatrix(hudCamera.combined);
-            hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, pontuacao);
+            hud.drawHUD(batch, shapeRenderer, viewport, hudCamera, vidaRato, VIDA_MAX, game.pontuacaoGlobal);
             Gdx.gl.glDisable(GL20.GL_BLEND);
         }
-
-        // b2dr.render(world, camera.combined);
     }
 
     private void updateCamera() {
         viewport.apply();
-        float mapWidth = MAP_WIDTH_PX / Player.PPM;
-        float mapHeight = MAP_HEIGHT_PX / Player.PPM;
+        float mapWidth = mapWidthPx / Player.PPM;
+        float mapHeight = mapHeightPx / Player.PPM;
         float halfWidth = viewport.getWorldWidth() / 2f;
         float halfHeight = viewport.getWorldHeight() / 2f;
 
@@ -254,30 +317,38 @@ public abstract class BaseGameScreen implements Screen {
         mapRenderer.setView(camera);
     }
 
-    protected abstract BaseGameScreen newInstance();
+    @Override
+    public void resize(int w, int h) { viewport.update(w, h, true); }
 
-    @Override public void resize(int w, int h) { viewport.update(w, h, true); }
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
 
     @Override
     public void dispose() {
+
+        stopMusicIfPlaying();
+
+        if (gameMusic != null) {
+            gameMusic.dispose();
+            gameMusic = null;
+        }
+
         batch.dispose();
         if (gameOverTexture != null) gameOverTexture.dispose();
-        //player.dispose();
         if (hud != null) hud.dispose();
         if (world != null) world.dispose();
         if (map != null) map.dispose();
         if (b2dr != null) b2dr.dispose();
         if (mapRenderer != null) mapRenderer.dispose();
-
-        // Chamada de dispose() no controlador injetado
         if (pedalController != null) pedalController.dispose();
     }
 
-    // Listener interno (restaurado)
+
+    // -------------------- CONTACT LISTENER --------------------
+
     protected static class CustomContactListener implements ContactListener {
+
         private final BaseGameScreen screen;
         private final List<Collectible> itemsToRemove = new ArrayList<>();
 
@@ -298,9 +369,11 @@ public abstract class BaseGameScreen implements Screen {
 
         @Override
         public void beginContact(Contact contact) {
+
             Fixture a = contact.getFixtureA();
             Fixture b = contact.getFixtureB();
             Object da = a.getUserData(), db = b.getUserData();
+
             if (da == null || db == null) return;
 
             boolean isFoot = da.equals("foot") || db.equals("foot");
@@ -311,46 +384,50 @@ public abstract class BaseGameScreen implements Screen {
             if (!isPlayer) return;
 
             Collectible item = null;
+
             if (da instanceof Collectible) item = (Collectible) da;
             if (db instanceof Collectible) item = (Collectible) db;
+
             if (item == null) return;
 
             if (item instanceof Cheese) {
                 Cheese c = (Cheese) item;
                 if (c.ativo) {
-                    screen.pontuacao++;
+                    screen.game.pontuacaoGlobal++;
                     screen.vidaRato = Math.min(screen.VIDA_MAX, screen.vidaRato + screen.VIDA_POR_QUEIJO);
                     c.ativo = false;
                     itemsToRemove.add(c);
                 }
-            } else if (item instanceof RottenCheese) {
+            }
+
+            else if (item instanceof RottenCheese) {
                 RottenCheese rc = (RottenCheese) item;
                 if (rc.ativo) {
-                    screen.vidaRato -= screen.DANO_QUEIJO_ESTRAGADO;
+                    screen.applyDamage(screen.DANO_QUEIJO_ESTRAGADO);
                     rc.ativo = false;
                     itemsToRemove.add(rc);
                 }
-            } else if (item instanceof Trap) {
-                Trap t = (Trap) item;
-                if (t.ativo) {
-                    screen.vidaRato = 0;
-                    t.ativo = false;
-                    // traps não são removidas
-                }
             }
 
-            if (screen.vidaRato <= 0) {
-                screen.gameOver = true;
-                screen.gameOverTimer = 1.5f;
+            else if (item instanceof Trap) {
+                Trap t = (Trap) item;
+                if (t.ativo) {
+                    screen.applyDamage(screen.DANO_RATOEIRA);
+                    t.ativo = false;
+                }
             }
         }
 
         @Override
         public void endContact(Contact contact) {
-            Fixture a = contact.getFixtureA(), b = contact.getFixtureB();
+            Fixture a = contact.getFixtureA();
+            Fixture b = contact.getFixtureB();
             Object da = a.getUserData(), db = b.getUserData();
-            if (da == null || db == null) return;
-            if ((da.equals("foot") || db.equals("foot")) && (da.equals("ground") || db.equals("ground"))) {
+
+            if ((da == null || db == null)) return;
+
+            if ((da.equals("foot") || db.equals("foot")) &&
+                (da.equals("ground") || db.equals("ground"))) {
                 screen.player.setGrounded(false);
             }
         }

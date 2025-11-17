@@ -30,7 +30,7 @@ public class RottenCheese extends Collectible {
     public void respawnRandom() {
         float margin = 50;
         float x_px = MathUtils.random(margin, worldWidth - sizeWidth - margin);
-        float y_px = MathUtils.random(groundY + 80, groundY + 200);
+        float y_px = MathUtils.random(groundY + 80, groundY + 80);
 
         // Recria o corpo na nova posição
         recreateBody(x_px, y_px);

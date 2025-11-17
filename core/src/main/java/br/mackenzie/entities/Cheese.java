@@ -29,9 +29,9 @@ public class Cheese extends Collectible {
 
     @Override
     public void respawnRandom() {
-        float margin = 100;
+        float margin = 60;
         float x_px = MathUtils.random(margin, worldWidth - sizeWidth - margin);
-        float y_px = MathUtils.random(groundY + 80, groundY + 200);
+        float y_px = MathUtils.random(groundY + 80, groundY + 80);
 
         // Recria o corpo na nova posição (o 'recreateBody' destruirá o antigo Body Box2D)
         recreateBody(x_px, y_px);

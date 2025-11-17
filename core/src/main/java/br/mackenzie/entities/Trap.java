@@ -15,7 +15,7 @@ public class Trap extends Collectible {
 
     public Trap(World world, float xpx, float ypx) {
         super(world, "ratoeira.png",
-            70f, 50f, // Tamanho em Pixels
+            10f, 30f, // Tamanho em Pixels
             xpx, ypx);
     }
 
@@ -36,7 +36,4 @@ public class Trap extends Collectible {
         // Recria o corpo na nova posição
         recreateBody(x_px, y_px);
     }
-
-    // Armadilhas geralmente não são coletadas e não desaparecem, mas usamos Collectible.collect()
-    // no ContactListener para aplicar a lógica de dano.
 }
