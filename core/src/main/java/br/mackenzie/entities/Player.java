@@ -22,8 +22,8 @@ public class Player {
     private final float JUMP_FORCE = 2f;      // Força de impulso vertical
     private final float MAX_SPEED_CAP = 5f;   // Velocidade horizontal máxima
 
-    private int vida = 100;
-    private final int VIDA_MAX = 100;
+    private final int vidaAtual = 100;
+    private final int vidaMax = 100;
 
     public Player(World world, float x, float y) {
         createBody(world, x, y);
@@ -163,16 +163,11 @@ public class Player {
         return isGrounded;
     }
 
-    public int getVida() {
-        return vida;
+    public int getVidaAtual(){
+        return vidaAtual;
     }
 
-    public int getVidaMax() {
-        return VIDA_MAX;
-    }
-
-    public void setVida(int vida) {
-        // Garante que a vida não exceda o máximo
-        this.vida = Math.min(vida, VIDA_MAX);
+    public int getVidaMax(){
+        return vidaMax;
     }
 }

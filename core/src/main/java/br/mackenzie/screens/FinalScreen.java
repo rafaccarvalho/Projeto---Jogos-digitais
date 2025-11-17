@@ -19,7 +19,7 @@ public class FinalScreen implements Screen {
     @Override
     public void show() {
         batch = new SpriteBatch();
-        finalTexture = new Texture("telaFinal.jpg"); // coloque sua imagem final
+        finalTexture = new Texture("telaFinal.jpg");
     }
 
     @Override
@@ -32,7 +32,8 @@ public class FinalScreen implements Screen {
 
         // Voltar ao menu ou reiniciar jogo
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            game.setScreen(new GameScreen1(game)); // ou tela inicial
+            game.pontuacaoGlobal = 0;
+            game.setScreen(new GameScreen1(game));
             dispose();
         }
     }

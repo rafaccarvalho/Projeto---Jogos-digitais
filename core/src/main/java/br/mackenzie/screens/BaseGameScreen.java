@@ -57,7 +57,7 @@ public abstract class BaseGameScreen implements Screen {
 
     protected int vidaRato;
     protected int VIDA_MAX;
-    protected final int VIDA_POR_QUEIJO = 20;
+    protected final int VIDA_POR_QUEIJO = 10;
     protected final int DANO_RATOEIRA = 100;
     protected final int DANO_QUEIJO_ESTRAGADO = 10;
 
@@ -149,7 +149,7 @@ public abstract class BaseGameScreen implements Screen {
 
         float playerStartX = 200f, playerStartY = 120f;
         player = new Player(world, playerStartX, playerStartY);
-        vidaRato = player.getVida();
+        vidaRato = player.getVidaAtual();
         VIDA_MAX = player.getVidaMax();
 
         collectibles = new ArrayList<>();
@@ -192,6 +192,8 @@ public abstract class BaseGameScreen implements Screen {
         vidaRato -= damage;
 
         if (vidaRato <= 0) {
+            game.pontuacaoGlobal = Math.max(0, game.pontuacaoGlobal - 5);
+
             gameOver = true;
             gameOverTimer = 1.5f;
         }
@@ -272,8 +274,10 @@ public abstract class BaseGameScreen implements Screen {
             return;
         }
 
-        if (player.getBody().getPosition().y < -2f)
+        if (player.getBody().getPosition().y < -2f) {
+            game.pontuacaoGlobal = Math.max(0, game.pontuacaoGlobal - 5);
             vidaRato = 0;
+        }
 
         ScreenUtils.clear(Color.BLACK);
         mapRenderer.render();
