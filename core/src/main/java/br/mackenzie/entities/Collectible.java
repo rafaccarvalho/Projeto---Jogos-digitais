@@ -30,15 +30,12 @@ public abstract class Collectible {
         createBody(xpx, ypx, this);
     }
 
-    // Método abstrato: Implementado nas classes filhas para definir CircleShape, PolygonShape, etc.
+
     protected abstract Shape getShape(float widthPx, float heightPx);
 
     protected void createBody(float xpx, float ypx, Object userData) {
-        // Se já existe um corpo, destruímos o corpo Box2D (necessário se o corpo foi movido/resetado)
+
         if (body != null) {
-            // IMPORTANTE: Destruição do body antigo se a classe filha for re-criada/resetada sem destruir o body.
-            // Como a GameScreen fará a destruição após a coleta, este bloco não deve ser acionado.
-            // Se for necessário para o reset, você pode chamar world.destroyBody(body); aqui.
         }
 
         BodyDef bdef = new BodyDef();
@@ -46,7 +43,7 @@ public abstract class Collectible {
         bdef.position.set(xpx / PPM, ypx / PPM);
         body = world.createBody(bdef);
 
-        // Pega a forma da classe filha
+
         Shape shape = getShape(sprite.getWidth() * PPM, sprite.getHeight() * PPM);
 
         FixtureDef fdef = new FixtureDef();
@@ -60,18 +57,7 @@ public abstract class Collectible {
         markedForRemoval = false;
     }
 
-    // Chamado no ContactListener
-    public void collect() {
-        if (!ativo) return;
-        this.ativo = false;
-        this.markedForRemoval = true;
 
-        if (body != null) {
-            body.setActive(false); // Desativa colisões imediatamente
-        }
-    }
-
-    // Chamado no GameScreen.resetGame()
     public void recreateBody(float xpx, float ypx) {
         // Destrói o corpo Box2D antigo antes de recriar
         if (body != null) {
@@ -81,11 +67,11 @@ public abstract class Collectible {
         createBody(xpx, ypx, this);
     }
 
-    public abstract void respawnRandom(); // Implementado na classe filha
+    public abstract void respawnRandom();
 
-    // Getters
+
     public Body getBody() { return body; }
-    public boolean isMarkedForRemoval() { return markedForRemoval; }
+
 
     public void update() {
         if (ativo && body != null) {
@@ -101,9 +87,5 @@ public abstract class Collectible {
         if (ativo && body != null) {
             sprite.draw(batch);
         }
-    }
-
-    public void dispose() {
-        if (texture != null) texture.dispose();
     }
 }

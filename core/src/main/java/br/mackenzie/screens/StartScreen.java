@@ -17,7 +17,7 @@ public class StartScreen implements Screen {
     private OrthographicCamera camera;
     private Viewport viewport;
 
-    // Tamanho da tela (mais fácil de editar)
+    // Tamanho da tela
     private static final float WORLD_WIDTH = 1280;
     private static final float WORLD_HEIGHT = 720;
 
@@ -31,9 +31,7 @@ public class StartScreen implements Screen {
         telaInicial = new Texture("telainicial.png");
 
         camera = new OrthographicCamera();
-        // Imagem fica fixa
-        // viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
-        // Imagem estica (mas cobre a tela inteira)
+
         viewport = new com.badlogic.gdx.utils.viewport.StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
         viewport.apply();
 

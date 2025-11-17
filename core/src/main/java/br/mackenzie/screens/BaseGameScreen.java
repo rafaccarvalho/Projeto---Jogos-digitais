@@ -52,7 +52,7 @@ public abstract class BaseGameScreen implements Screen {
 
     protected IPedalController pedalController;
 
-    // 🎧 Música da fase
+
     protected Music gameMusic;
 
     protected int vidaRato;
@@ -64,8 +64,7 @@ public abstract class BaseGameScreen implements Screen {
     protected boolean gameOver = false;
     protected float gameOverTimer = 0;
 
-    //protected final float MAP_WIDTH_PX = 3900f;
-    //protected final float MAP_HEIGHT_PX = 672f;
+
     protected float mapWidthPx = 0f;
     protected float mapHeightPx = 0f;
     protected final float GRAVITY = -7f;
@@ -87,10 +86,6 @@ public abstract class BaseGameScreen implements Screen {
         this.game = game;
     }
 
-    public BaseGameScreen(Main game, IPedalController pedalController) {
-        this.game = game;
-        this.pedalController = pedalController;
-    }
 
     @Override
     public void show() {
@@ -104,7 +99,7 @@ public abstract class BaseGameScreen implements Screen {
         viewport = new ExtendViewport(200 / Player.PPM, 200 / Player.PPM, camera);
         viewport.apply();
 
-        // 🎵 Música da fase
+
         gameMusic = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
         gameMusic.setLooping(true);
         gameMusic.setVolume(0.5f);
@@ -129,13 +124,13 @@ public abstract class BaseGameScreen implements Screen {
 
                 mapWidthPx += 3 * tilePixelWidth;
             } else {
-                mapWidthPx = 3900f; // fallback
+                mapWidthPx = 3900f;
             }
 
             if (mapTileHeight != null && tilePixelHeight != null) {
                 mapHeightPx = mapTileHeight * tilePixelHeight;
             } else {
-                mapHeightPx = 672f; // fallback
+                mapHeightPx = 672f;
             }
         } catch (Exception e) {
             Gdx.app.error("BaseGameScreen", "Erro lendo propriedades do mapa, usando valores padrão", e);
@@ -261,7 +256,7 @@ public abstract class BaseGameScreen implements Screen {
         updateCamera();
 
         float playerX = player.getBody().getPosition().x * Player.PPM;
-        float exitThreshold = Math.max(100f, mapWidthPx - 100f); // evita threshold incorreto se mapa muito pequeno
+        float exitThreshold = Math.max(100f, mapWidthPx - 100f);
         if (playerX >= exitThreshold) {
             stopMusicIfPlaying();
             Screen next = getNextScreen();
@@ -349,7 +344,6 @@ public abstract class BaseGameScreen implements Screen {
     }
 
 
-    // -------------------- CONTACT LISTENER --------------------
 
     protected static class CustomContactListener implements ContactListener {
 

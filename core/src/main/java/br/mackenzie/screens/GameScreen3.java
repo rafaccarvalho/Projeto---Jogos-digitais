@@ -11,7 +11,7 @@ public class GameScreen3 extends BaseGameScreen {
 
     @Override
     protected String getMapPath() {
-        return "mapafase3.tmx"; // caminho do seu mapa
+        return "mapafase3.tmx";
     }
 
     @Override
@@ -19,7 +19,6 @@ public class GameScreen3 extends BaseGameScreen {
         return new GameScreen3(game);
     }
 
-    // Última fase → envia para a FinalScreen
     @Override
     protected Screen getNextScreen() {
         return new FinalScreen(game);
