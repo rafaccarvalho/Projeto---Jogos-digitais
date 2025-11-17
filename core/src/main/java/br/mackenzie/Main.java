@@ -1,12 +1,11 @@
 package br.mackenzie;
 
+import br.mackenzie.screens.*;
 import com.badlogic.gdx.Game;
-import br.mackenzie.screens.StartScreen;
 
 public class Main extends Game {
-
+    public int pontuacaoGlobal = 0;
     @Override
     public void create() {
         setScreen(new StartScreen(this));
-    }
-}
+    }}

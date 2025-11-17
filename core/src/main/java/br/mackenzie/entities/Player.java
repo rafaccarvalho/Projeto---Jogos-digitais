@@ -3,142 +3,138 @@ package br.mackenzie.entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.utils.Array;
 
 public class Player {
-    public static final float PPM = 15f;
 
-    private World world;
+    public static final float PPM = 90f;
+
+
     private Body body;
     private Sprite sprite;
-    private int vida = 100;
-    private int vidaMax = 100;
-
-    private Texture texIdle , texRight , textLeft;
-
-    private boolean isGrounded = false;
-    private boolean facingRight = true;
+    private boolean isGrounded = false; // Essencial para o pulo
+    private float currentPedalValue = 0f; // Valor normalizado (0.0 a 1.0) do PedalController
 
 
-    private final float moveSpeed = 2000f;
-    private final float jumpImpulse = 10f;
-    private final float maxWalkVel = 6f;
+    private final float JUMP_FORCE = 2f;      // Força de impulso vertical
+    private final float MAX_SPEED_CAP = 5f;   // Velocidade horizontal máxima
 
-    public Player(World world, float startXpx, float startYpx) {
-        this.world = world;
+    private final int vidaAtual = 100;
+    private final int vidaMax = 100;
 
-        texIdle = new Texture("ratoFrente3.PNG");
-        texRight = new Texture("ratoAndar1.PNG");
-        textLeft = new Texture("ratoAndar2.PNG");
+    public Player(World world, float x, float y) {
+        createBody(world, x, y);
 
 
-        // Sprite inicial (parado)
-        sprite = new Sprite(texIdle);
-        sprite.setSize(15f / PPM, 15f / PPM);
+        Texture texture = new Texture("ratoAndar1.png");
 
-        defineBody(startXpx, startYpx);
+        sprite = new Sprite(texture);
+        sprite.setSize(32 / PPM, 32 / PPM);
+        sprite.setOrigin(sprite.getWidth() / 2, sprite.getHeight() / 2);
     }
 
-    private void defineBody(float startXpx, float startYpx) {
+    private void createBody(World world, float x, float y) {
         BodyDef bdef = new BodyDef();
         bdef.type = BodyDef.BodyType.DynamicBody;
-        bdef.position.set(startXpx / PPM, startYpx / PPM);
-        bdef.fixedRotation = true;
-        body = world.createBody(bdef);
+        bdef.position.set(x / PPM, y / PPM);
 
-        PolygonShape bodyShape = new PolygonShape();
-        bodyShape.setAsBox(sprite.getWidth() / 2f, sprite.getHeight() / 2f);
+        body = world.createBody(bdef);
+        body.setFixedRotation(true);
+
+
+        PolygonShape mainShape = new PolygonShape();
+        mainShape.setAsBox(10 / PPM, 10 / PPM);
 
         FixtureDef fdef = new FixtureDef();
-        fdef.shape = bodyShape;
-        fdef.density = 1f;
-        fdef.friction = 0.4f;
-        fdef.restitution = 0f;
-        body.createFixture(fdef).setUserData("player");
-        bodyShape.dispose();
+        fdef.shape = mainShape;
+        fdef.density = 8f;
+        fdef.friction = 0.2f;
 
-        // Sensor do pé
+        body.createFixture(fdef).setUserData("player");
+        mainShape.dispose();
+
+
         PolygonShape footShape = new PolygonShape();
-        footShape.setAsBox((sprite.getWidth() / 2f) * 0.9f, 5f / PPM,
-            new Vector2(0, -(sprite.getHeight() / 2f)), 0);
+        footShape.setAsBox(12 / PPM, 2 / PPM, new Vector2(0, -16 / PPM), 0);
+
         fdef.shape = footShape;
         fdef.isSensor = true;
-        fdef.density = 0;
+        fdef.friction = 0f;
+
         body.createFixture(fdef).setUserData("foot");
         footShape.dispose();
     }
 
+    public void setPedalVelocity(float normalizedValue) {
+        this.currentPedalValue = normalizedValue;
+    }
+
+    private final float KEYBOARD_SIDEL_SPEED = 0.2f;
+
     public void handleInput() {
+
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.UP)) && isGrounded()) {
+
+            body.applyLinearImpulse(
+                new Vector2(0, JUMP_FORCE),
+                body.getWorldCenter(),
+                true
+            );
+        }
+
         Vector2 vel = body.getLinearVelocity();
-        float desiredVelX = 0;
+        float targetXVelocity = 0;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            desiredVelX = moveSpeed;
-            sprite.setTexture(texRight);
-            facingRight = true;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            desiredVelX = -moveSpeed;
-            sprite.setTexture(textLeft);
-            facingRight = false;
-        }else{
-            sprite.setTexture(texIdle);
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
+            targetXVelocity = -MAX_SPEED_CAP * KEYBOARD_SIDEL_SPEED;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D)) {
+            targetXVelocity = MAX_SPEED_CAP * KEYBOARD_SIDEL_SPEED;
         }
 
-        float velChangeX = desiredVelX - vel.x;
-        float impulseX = body.getMass() * velChangeX;
-        body.applyLinearImpulse(new Vector2(impulseX, 0), body.getWorldCenter(), true);
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && isGrounded) {
-            body.applyLinearImpulse(new Vector2(0, jumpImpulse), body.getWorldCenter(), true);
-            isGrounded = false;
-        }
-
-        if (Math.abs(body.getLinearVelocity().x) > maxWalkVel) {
-            body.setLinearVelocity(Math.signum(body.getLinearVelocity().x) * maxWalkVel, body.getLinearVelocity().y);
+        if (targetXVelocity != 0) {
+            body.setLinearVelocity(targetXVelocity, vel.y);
         }
     }
 
-    // Atualiza posição e animação
     public void update(float delta) {
-        //sprite.setRegion((delta));
+        float targetSpeed = currentPedalValue * MAX_SPEED_CAP;
+        Vector2 velocity = body.getLinearVelocity();
 
-        sprite.setSize(40f / PPM, 25f / PPM);
+        float newXVelocity = (velocity.x * 0.9f) + (targetSpeed * 0.1f);
+
+        body.setLinearVelocity(newXVelocity, velocity.y);
+
         sprite.setPosition(
-            body.getPosition().x - sprite.getWidth() / 2f,
-            body.getPosition().y - sprite.getHeight() / 2f
+            body.getPosition().x - sprite.getWidth() / 2,
+            body.getPosition().y - sprite.getHeight() / 2
         );
-
     }
 
     public void draw(SpriteBatch batch) {
         sprite.draw(batch);
     }
 
-    public Body getBody() { return body; }
-    public void setGrounded(boolean g) { this.isGrounded = g; }
-
-    public void resetPosition(float xpx, float ypx) {
-        body.setTransform(xpx / PPM, ypx / PPM, 0);
-        body.setLinearVelocity(0, 0);
-        isGrounded = false;
+    public Body getBody() {
+        return body;
     }
 
-    public void dispose() {
-
+    public void setGrounded(boolean grounded) {
+        this.isGrounded = grounded;
     }
 
-    public int getVida() {
-        return vida;
+    public boolean isGrounded() {
+        return isGrounded;
     }
 
-    public void setVida(int vida) {
-        this.vida = vida;
+    public int getVidaAtual(){
+        return vidaAtual;
     }
 
-    public int getVidaMax() {
+    public int getVidaMax(){
         return vidaMax;
     }
 }
