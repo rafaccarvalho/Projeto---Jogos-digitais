@@ -1,4 +1,4 @@
-# 🐭 Jogo do Rato – LibGDX + Box2D
+# 🐭 Ratventure
 
 Jogo 2D desenvolvido em **Java** utilizando **LibGDX** e **Box2D**, com múltiplas fases, sistema de pontuação, vida, colisões físicas e tela final.
 
