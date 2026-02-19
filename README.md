@@ -1,271 +1,206 @@
-```markdown
-# 🐭 Jogo 2D com LibGDX – Ratventure
+# 🐭 Jogo do Rato – LibGDX + Box2D
 
-Projeto desenvolvido utilizando **Java + LibGDX + Box2D**, estruturado em múltiplas telas e fases, com sistema de física, colisões, HUD, música e progressão entre mapas.
+Jogo 2D desenvolvido em **Java** utilizando **LibGDX** e **Box2D**, com múltiplas fases, sistema de pontuação, vida, colisões físicas e tela final.
+
+O jogador controla um rato que deve atravessar o mapa, coletar queijos, evitar armadilhas e chegar ao final da fase.
 
 ---
 
-## 📌 Descrição
+# 🎮 Funcionalidades
 
-O jogo é um **plataforma 2D** onde o jogador controla um rato que:
-
-- Se movimenta horizontalmente
-- Pula quando está no chão
-- Coleta queijos para ganhar pontos e vida
-- Evita ratoeiras
-- Sofre penalidades ao coletar queijo estragado
-- Avança por três fases até chegar à tela final
-
-O jogo possui:
-
-- Sistema de física com **Box2D**
-- Mapas `.tmx` carregados via **Tiled**
-- Sistema de HUD
-- Música de fundo
+- Sistema de múltiplas fases
+- Física com Box2D
+- Sistema de vida
+- Sistema de pontuação global
+- Itens coletáveis aleatórios
+- Dano por armadilhas e queijo estragado
+- HUD com vida e pontuação
 - Tela inicial
-- Tela final
-- Sistema de Game Over
+- Tela de Game Over
+- Tela Final
+- Música de fundo em loop
+- Controle por teclado
+- Suporte a controlador externo via `IPedalController`
 
 ---
 
-## 🧠 Estrutura do Projeto
+# 🕹️ Controles
 
-### 📂 `screens`
+## Teclado
 
-Contém as telas do jogo:
+- `←` ou `A` → mover para esquerda  
+- `→` ou `D` → mover para direita  
+- `SPACE` ou `↑` → pular  
 
-- `StartScreen` → Tela inicial (`telainicial.png`)
-- `GameScreen1` → Primeira fase (`esgoto.tmx`)
-- `GameScreen2` → Segunda fase (`mapafase2.tmx`)
-- `GameScreen3` → Terceira fase (`mapafase3.tmx`)
-- `FinalScreen` → Tela final (`telaFinal.jpg`)
-- `BaseGameScreen` → Classe abstrata base das fases
+## ENTER
 
-A classe `BaseGameScreen` é responsável por:
-
-- Inicializar mundo físico (`World`)
-- Configurar câmera e viewport
-- Carregar mapas `.tmx`
-- Criar corpos físicos do mapa
-- Gerenciar HUD
-- Gerenciar música (`music.mp3`)
-- Detectar colisões
-- Gerenciar Game Over
-- Controlar transição entre fases
+- Iniciar jogo (na tela inicial)  
+- Reiniciar fase (Game Over)  
+- Reiniciar jogo (tela final)  
 
 ---
 
-### 📂 `entities`
+# 🧠 Mecânicas do Jogo
 
-Contém as entidades do jogo:
+## 🧀 Coletáveis
 
-- `Player`
-- `Collectible` (classe abstrata)
-- `Cheese`
-- `RottenCheese`
-- `Trap`
+O jogo possui três tipos de itens gerados aleatoriamente:
 
----
-
-## 🎮 Mecânicas do Jogo
-
-### 🐭 Player
-
-- Usa `Box2D`
-- Corpo dinâmico com rotação fixa
-- Sensor nos pés para detectar chão
-- Vida inicial: `100`
-- Velocidade máxima controlada
-- Pode ser controlado por:
-  - Teclado
-  - Interface `IPedalController`
-
-#### Controles:
-
-| Tecla | Ação |
-|-------|------|
-| ← / A | Andar para esquerda |
-| → / D | Andar para direita |
-| SPACE / ↑ | Pular |
-| ENTER | Avançar tela / Reiniciar |
-
----
-
-### 🧀 Itens Coletáveis
-
-Sistema baseado na classe abstrata `Collectible`.
-
-#### 🟡 Cheese
+### Cheese
 - +1 ponto
-- +10 de vida (até o máximo)
+- +10 de vida
 
-#### 🟤 RottenCheese
-- -1 ponto (se houver pontuação)
-- Caso não haja pontos, aplica dano
+### RottenCheese
+- -1 ponto (se pontuação > 0)
 
-#### ⚠ Trap
-- Causa 100 de dano
+### Trap
+- -100 de vida
+
+São gerados **15 itens iniciais por fase**, com respawn em posições aleatórias.
 
 ---
 
-## ❤️ Sistema de Vida
+# ❤️ Sistema de Vida
 
-- Vida máxima: `100`
-- Dano ratoeira: `100`
-- Dano queijo estragado: `10`
-- Ganho por queijo: `+10`
+- Vida inicial: 100
+- Vida máxima: 100
+- Vida ao coletar queijo: +10
+- Dano ratoeira: 100
+- Dano queijo estragado: 10
 
 Se a vida chegar a 0:
-
-- Perde 5 pontos
-- Ativa tela de Game Over
-- ENTER reinicia a fase atual
-
----
-
-## 🗺 Sistema de Mapas
-
-- Mapas carregados com `TmxMapLoader`
-- Renderizados com `OrthogonalTiledMapRenderer`
-- Colisões criadas automaticamente a partir da camada 2 do mapa
-- Gravidade configurada como `-7f`
-
-A câmera segue o jogador e é limitada ao tamanho do mapa.
-
-Ao atingir o final do mapa:
-- Avança para próxima fase
-- Última fase direciona para `FinalScreen`
+- O jogador perde 5 pontos (mínimo 0)
+- Tela de Game Over é exibida
+- Pode reiniciar pressionando ENTER
 
 ---
 
-## 🎵 Áudio
+# 🏁 Progressão de Fases
 
-- Música: `music.mp3`
-- Loop automático
-- Volume configurado em 0.5
-- Sistema evita duplicação da música
+O jogo possui 3 fases:
 
----
+1. GameScreen1 → `esgoto.tmx`
+2. GameScreen2 → `mapafase2.tmx`
+3. GameScreen3 → `mapafase3.tmx`
 
-## 🖥 Telas
-
-### ▶ StartScreen
-- Exibe `telainicial.png`
-- ENTER inicia `GameScreen1`
-
-### 🎮 GameScreens
-- 3 fases progressivas
-- Cada fase herda `BaseGameScreen`
-
-### 🏁 FinalScreen
-- Exibe `telaFinal.jpg`
-- ENTER reinicia o jogo
-- Pontuação global é resetada
+Ao alcançar o final do mapa:
+- Avança para a próxima fase
+- Na última fase, vai para a FinalScreen
 
 ---
 
-## 🔄 Sistema de Colisão
+# 🗺️ Estrutura de Telas
 
-Implementado via `CustomContactListener`.
+- StartScreen
+- GameScreen1
+- GameScreen2
+- GameScreen3
+- FinalScreen
 
-Detecta:
+Todas as fases herdam de:
 
-- Pé do jogador com chão
-- Jogador com itens
-- Aplica efeitos conforme tipo do item
-- Remove corpos físicos corretamente
-
----
-
-## 📊 HUD
+BaseGameScreen
 
 Responsável por:
-
-- Exibir vida atual
-- Exibir vida máxima
-- Exibir pontuação global
-
-Renderizado com:
-
-- `SpriteBatch`
-- `ShapeRenderer`
-- Câmera separada da câmera do mundo
+- Mundo Box2D
+- Renderização do mapa TMX
+- Câmera
+- HUD
+- Música
+- Sistema de colisão
+- Spawn de coletáveis
+- Lógica de Game Over
 
 ---
 
-## 🧩 Tecnologias Utilizadas
+# ⚙️ Arquitetura
 
-- Java
-- LibGDX
-- Box2D
-- Tiled (.tmx)
+## Pacotes
 
----
-
-## 📁 Arquivos de Recursos
-
-O projeto utiliza:
-
-- `telainicial.png`
-- `telaFinal.jpg`
-- `gameover.png`
-- `music.mp3`
-- `ratoAndar1.png`
-- `queijoestragado.png`
-- `ratoeira.png`
-- `esgoto.tmx`
-- `mapafase2.tmx`
-- `mapafase3.tmx`
-
----
-
-## 🚀 Fluxo do Jogo
-
-StartScreen  
-⬇  
-GameScreen1  
-⬇  
-GameScreen2  
-⬇  
-GameScreen3  
-⬇  
-FinalScreen  
-
----
-
-## 🧹 Gerenciamento de Recursos
-
-Cada tela implementa `dispose()` corretamente:
-
-- Libera texturas
-- Libera música
-- Libera mundo físico
-- Libera renderizadores
-- Evita vazamento de memória
-
----
-
-## 📌 Observações Técnicas
-
-- PPM (Pixels Per Meter) definido como `90f`
-- Mundo físico com `World(new Vector2(0, -7f), true)`
-- Player usa interpolação para suavizar velocidade horizontal
-- Itens são recriados dinamicamente com `recreateBody()`
-- Sistema de respawn aleatório para coletáveis
-
----
-
-## 📎 Conclusão
-
-O projeto implementa um jogo 2D completo com:
-
-- Estrutura organizada
-- Separação clara entre telas
-- Sistema de física robusto
-- Gerenciamento de colisões
-- Progressão entre fases
-- HUD funcional
-- Sistema de pontuação e vida
-
-Desenvolvido com foco em organização, reutilização de código (via `BaseGameScreen`) e integração entre física e renderização.
 ```
+br.mackenzie
+ ├── screens
+ ├── entities
+ ├── ui
+ └── input
+```
+
+---
+
+# 👤 Player
+
+- Corpo dinâmico no Box2D
+- Sensor nos pés para detectar chão
+- Pulo com impulso vertical
+- Movimento horizontal limitado
+- Suporte a controle externo via IPedalController
+- Sprite sincronizado com corpo físico
+
+---
+
+# 🧱 Física
+
+- Gravidade: -7
+- Conversão Pixel → Metro: PPM = 90
+- Colisões tratadas com CustomContactListener
+- Objetos do mapa criados a partir da camada 2 do `.tmx`
+
+---
+
+# 🎵 Áudio
+
+- Música: music.mp3
+- Loop ativado
+- Volume: 0.5
+- Garantia de não duplicação entre telas
+
+---
+
+# 🖼️ Assets Utilizados
+
+- telainicial.png
+- telaFinal.jpg
+- gameover.png
+- ratoAndar1.png
+- queijoestragado.png
+- ratoeira.png
+- esgoto.tmx
+- mapafase2.tmx
+- mapafase3.tmx
+- music.mp3
+
+---
+
+# 🚀 Como Executar
+
+1. Importar o projeto em uma IDE compatível com LibGDX
+2. Garantir que os assets estejam na pasta correta
+3. Executar a classe principal do projeto (`Main`)
+
+---
+
+# 📌 Observações Técnicas
+
+- Viewport principal: ExtendViewport
+- Tela inicial usa StretchViewport
+- Sistema de câmera acompanha o jogador com limites do mapa
+- Caso o jogador caia do mapa:
+  - Perde 5 pontos
+  - Vida vai para 0
+- O jogo utiliza OrthogonalTiledMapRenderer para renderização do mapa
+
+---
+
+# 🏆 Fluxo do Jogo
+
+1. Tela inicial (ENTER)
+2. Fase 1
+3. Fase 2
+4. Fase 3
+5. Tela Final (ENTER reinicia)
+
+---
+
+# 📄 Licença
+
+Projeto acadêmico desenvolvido para fins educacionais.
